@@ -1,0 +1,6 @@
+{
+  "created": "2025-06-10T15:25:49.293Z",
+  "purpose": "Complete disaster recovery backups",
+  "warning": "CRITICAL - DO NOT DELETE - Contains full system state",
+  "version": "1.0.0"
+}
