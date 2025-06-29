@@ -1,0 +1,28 @@
+[
+  {
+    "id": 5,
+    "title": "Digital Marketing Intern",
+    "company": "NewGiza Tech Solutions",
+    "posterEmail": "admin@newgiza.com",
+    "posterRole": "HR Manager",
+    "description": "Join our dynamic marketing team to gain hands-on experience in digital marketing, social media management, and content creation for our growing tech company.",
+    "requirements": null,
+    "skills": null,
+    "department": "Marketing",
+    "duration": "3 months",
+    "isPaid": true,
+    "stipend": "2500 EGP/month",
+    "location": null,
+    "positions": 1,
+    "contactEmail": "careers@newgiza-tech.com",
+    "contactPhone": null,
+    "startDate": null,
+    "applicationDeadline": null,
+    "isActive": true,
+    "isApproved": true,
+    "status": "approved",
+    "postedBy": null,
+    "createdAt": "2025-06-10T05:10:02.465Z",
+    "updatedAt": "2025-06-10T05:10:02.465Z"
+  }
+]
