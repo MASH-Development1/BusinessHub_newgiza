@@ -1,0 +1,214 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 10% 6%; /* #0F0F0F - Dark background */
+  --foreground: 0 0% 98%; /* #FAFAFA - Light text */
+  --muted: 210 15% 15%; /* #1A1A1A - Dark muted */
+  --muted-foreground: 215 13% 65%; /* #9CA3AF - Light muted text */
+  --popover: 210 15% 15%; /* #1A1A1A - Dark popover */
+  --popover-foreground: 0 0% 98%; /* #FAFAFA - Light popover text */
+  --card: 210 15% 15%; /* #262626 - Dark card */
+  --card-foreground: 0 0% 98%; /* #FAFAFA - Light card text */
+  --border: 215 14% 20%; /* #333333 - Dark border */
+  --input: 215 14% 20%; /* #333333 - Dark input */
+  --primary: 27 98% 63%; /* #FF8C42 - Orange primary */
+  --primary-foreground: 0 0% 98%; /* #FAFAFA - Light text on orange */
+  --secondary: 210 15% 15%; /* #262626 - Dark secondary */
+  --secondary-foreground: 0 0% 98%; /* #FAFAFA - Light secondary text */
+  --accent: 210 15% 15%; /* #262626 - Dark accent */
+  --accent-foreground: 0 0% 98%; /* #FAFAFA - Light accent text */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+  --ring: 27 98% 63%; /* #FF8C42 - Orange ring */
+  --radius: 0.5rem;
+  
+  /* NGBH Custom Colors */
+  --ngbh-orange: 27 98% 63%; /* #FF8C42 */
+  --ngbh-orange-light: 27 94% 54%; /* #FF6B1A */
+  --ngbh-dark: 210 10% 6%; /* #0F0F0F */
+  --ngbh-surface: 210 15% 15%; /* #1A1A1A */
+  --ngbh-card: 210 15% 15%; /* #262626 */
+  --ngbh-border: 215 14% 20%; /* #333333 */
+}
+
+.dark {
+  --background: 210 10% 6%; /* #0F0F0F */
+  --foreground: 0 0% 98%; /* #FAFAFA */
+  --muted: 210 15% 15%; /* #1A1A1A */
+  --muted-foreground: 215 13% 65%; /* #9CA3AF */
+  --popover: 210 15% 15%; /* #1A1A1A */
+  --popover-foreground: 0 0% 98%; /* #FAFAFA */
+  --card: 210 15% 15%; /* #262626 */
+  --card-foreground: 0 0% 98%; /* #FAFAFA */
+  --border: 215 14% 20%; /* #333333 */
+  --input: 215 14% 20%; /* #333333 */
+  --primary: 27 98% 63%; /* #FF8C42 */
+  --primary-foreground: 0 0% 98%; /* #FAFAFA */
+  --secondary: 210 15% 15%; /* #262626 */
+  --secondary-foreground: 0 0% 98%; /* #FAFAFA */
+  --accent: 210 15% 15%; /* #262626 */
+  --accent-foreground: 0 0% 98%; /* #FAFAFA */
+  --destructive: 0 84% 60%; /* #EF4444 */
+  --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+  --ring: 27 98% 63%; /* #FF8C42 */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-color: hsl(var(--ngbh-dark));
+    color: hsl(var(--foreground));
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  .page-section {
+    @apply min-h-screen w-full;
+  }
+
+  .page-section.hidden {
+    display: none;
+  }
+
+  .page-section.active {
+    display: block;
+  }
+
+  .ngbh-gradient {
+    background: linear-gradient(135deg, hsl(var(--ngbh-orange)), hsl(var(--ngbh-orange-light)));
+  }
+
+  .ngbh-logo-stack {
+    @apply relative w-8 h-8;
+  }
+
+  .ngbh-logo-stack::before,
+  .ngbh-logo-stack::after {
+    content: '';
+    @apply absolute bg-primary;
+    transform-origin: left center;
+    transform: rotate(45deg);
+  }
+
+  .ngbh-logo-stack::before {
+    @apply w-4 h-1 top-1;
+  }
+
+  .ngbh-logo-stack::after {
+    @apply w-6 h-1 top-3 left-1;
+  }
+
+  .filter-tab {
+    @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 cursor-pointer;
+  }
+
+  .filter-tab.active {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  .filter-tab:not(.active) {
+    @apply bg-card border border-border text-muted-foreground hover:border-primary/50 hover:text-foreground;
+  }
+
+  .job-card, .internship-card, .course-card, .profile-card {
+    @apply bg-card border border-border rounded-xl p-6 transition-all duration-200 hover:border-primary/50;
+  }
+
+  .skill-tag {
+    @apply bg-primary/20 text-primary px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .status-badge.active {
+    @apply bg-green-500/20 text-green-400;
+  }
+
+  .status-badge.pending {
+    @apply bg-yellow-500/20 text-yellow-400;
+  }
+
+  .status-badge.draft {
+    @apply bg-gray-500/20 text-gray-400;
+  }
+
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 rounded-lg font-semibold transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary border border-border hover:border-primary text-secondary-foreground px-6 py-3 rounded-lg font-semibold transition-colors;
+  }
+
+  .nav-link {
+    @apply text-foreground hover:text-primary transition-colors duration-200 font-medium px-3 py-2 rounded-md;
+  }
+
+  .nav-link.active {
+    @apply text-primary font-semibold bg-primary/10;
+  }
+
+  .input-field {
+    @apply w-full bg-muted border border-border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary;
+  }
+
+  .file-upload-area {
+    @apply border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer;
+  }
+
+  .file-upload-area:hover {
+    @apply border-primary/50;
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+  }
+
+  .modal-content {
+    @apply bg-card border border-border rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+  }
+
+  .stats-card {
+    @apply bg-card p-6 rounded-xl border border-border;
+  }
+
+  .nav-link {
+    @apply text-white hover:text-primary transition-colors font-medium !important;
+    color: white !important;
+  }
+
+  .nav-link.active {
+    @apply text-primary font-semibold !important;
+    color: hsl(var(--primary)) !important;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--ngbh-orange)), hsl(var(--ngbh-orange-light)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

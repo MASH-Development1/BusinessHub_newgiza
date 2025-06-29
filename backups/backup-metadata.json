@@ -1,0 +1,42 @@
+[
+  {
+    "id": "backup-1749015115460",
+    "timestamp": "2025-06-04T05:31:55.460Z",
+    "description": "Manual backup - 6/4/2025, 8:31:57 AM",
+    "tables": [
+      "users",
+      "profiles",
+      "jobs",
+      "internships",
+      "courses",
+      "applications",
+      "cv_showcase",
+      "email_whitelist",
+      "access_requests",
+      "community_benefits"
+    ],
+    "filesCount": 11,
+    "size": "808K",
+    "status": "completed"
+  },
+  {
+    "id": "backup-1749569201260",
+    "timestamp": "2025-06-10T15:26:41.260Z",
+    "description": "Manual backup - 6/10/2025, 6:26:51 PM",
+    "tables": [
+      "users",
+      "profiles",
+      "jobs",
+      "internships",
+      "courses",
+      "applications",
+      "cv_showcase",
+      "email_whitelist",
+      "access_requests",
+      "community_benefits"
+    ],
+    "filesCount": 14,
+    "size": "3.4M",
+    "status": "completed"
+  }
+]
