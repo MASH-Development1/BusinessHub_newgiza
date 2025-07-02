@@ -1,4 +1,12 @@
-import { pgTable, text, serial, integer, boolean, timestamp, varchar } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  varchar,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -52,8 +60,12 @@ export const jobs = pgTable("jobs", {
   jobType: varchar("job_type", { length: 50 }), // full-time, part-time, contract
   location: varchar("location", { length: 255 }),
   salaryRange: varchar("salary_range", { length: 100 }),
-  contactEmail: varchar("contact_email", { length: 255 }).notNull().default("contact@company.com"),
-  contactPhone: varchar("contact_phone", { length: 50 }).notNull().default("TBD"),
+  contactEmail: varchar("contact_email", { length: 255 })
+    .notNull()
+    .default("contact@company.com"),
+  contactPhone: varchar("contact_phone", { length: 50 })
+    .notNull()
+    .default("TBD"),
   isActive: boolean("is_active").default(true),
   isApproved: boolean("is_approved").default(false),
   status: varchar("status", { length: 20 }).default("pending"), // pending, approved, rejected
@@ -194,6 +206,67 @@ export const communityBenefits = pgTable("community_benefits", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Removed jobs (soft delete)
+export const removedJobs = pgTable("removed_jobs", {
+  id: serial("id").primaryKey(),
+  originalJobId: integer("original_job_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  company: varchar("company", { length: 255 }).notNull(),
+  posterEmail: varchar("poster_email", { length: 255 }).notNull(),
+  posterRole: varchar("poster_role", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  requirements: text("requirements"),
+  skills: text("skills"),
+  industry: varchar("industry", { length: 100 }),
+  experienceLevel: varchar("experience_level", { length: 50 }),
+  jobType: varchar("job_type", { length: 50 }),
+  location: varchar("location", { length: 255 }),
+  salaryRange: varchar("salary_range", { length: 100 }),
+  contactEmail: varchar("contact_email", { length: 255 }).notNull(),
+  contactPhone: varchar("contact_phone", { length: 50 }).notNull(),
+  isActive: boolean("is_active"),
+  isApproved: boolean("is_approved"),
+  status: varchar("status", { length: 20 }),
+  postedBy: integer("posted_by"),
+  originalCreatedAt: timestamp("original_created_at"),
+  originalUpdatedAt: timestamp("original_updated_at"),
+  removedAt: timestamp("removed_at").defaultNow(),
+  removedBy: integer("removed_by").references(() => users.id),
+  removalReason: varchar("removal_reason", { length: 500 }),
+});
+
+// Removed internships (soft delete)
+export const removedInternships = pgTable("removed_internships", {
+  id: serial("id").primaryKey(),
+  originalInternshipId: integer("original_internship_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  company: varchar("company", { length: 255 }).notNull(),
+  posterEmail: varchar("poster_email", { length: 255 }).notNull(),
+  posterRole: varchar("poster_role", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  requirements: text("requirements"),
+  skills: text("skills"),
+  department: varchar("department", { length: 100 }),
+  duration: varchar("duration", { length: 50 }).notNull(),
+  isPaid: boolean("is_paid"),
+  stipend: varchar("stipend", { length: 100 }),
+  location: varchar("location", { length: 255 }),
+  positions: integer("positions"),
+  contactEmail: varchar("contact_email", { length: 255 }).notNull(),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  startDate: varchar("start_date", { length: 100 }),
+  applicationDeadline: varchar("application_deadline", { length: 100 }),
+  isActive: boolean("is_active"),
+  isApproved: boolean("is_approved"),
+  status: varchar("status", { length: 20 }),
+  postedBy: integer("posted_by"),
+  originalCreatedAt: timestamp("original_created_at"),
+  originalUpdatedAt: timestamp("original_updated_at"),
+  removedAt: timestamp("removed_at").defaultNow(),
+  removedBy: integer("removed_by").references(() => users.id),
+  removalReason: varchar("removal_reason", { length: 500 }),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   profiles: many(profiles),
@@ -243,6 +316,23 @@ export const applicationsRelations = relations(applications, ({ one }) => ({
   }),
 }));
 
+export const removedJobsRelations = relations(removedJobs, ({ one }) => ({
+  postedBy: one(users, {
+    fields: [removedJobs.postedBy],
+    references: [users.id],
+  }),
+}));
+
+export const removedInternshipsRelations = relations(
+  removedInternships,
+  ({ one }) => ({
+    postedBy: one(users, {
+      fields: [removedInternships.postedBy],
+      references: [users.id],
+    }),
+  })
+);
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -250,46 +340,64 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
-export const insertProfileSchema = createInsertSchema(profiles).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  // Make these fields explicitly optional since they come from form data
-  userId: z.number().optional(),
-  skills: z.string().optional(),
-  experienceLevel: z.string().optional(),
-  linkedinUrl: z.string().optional(),
-  portfolioUrl: z.string().optional(),
-});
+export const insertProfileSchema = createInsertSchema(profiles)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    // Make these fields explicitly optional since they come from form data
+    userId: z.number().optional(),
+    skills: z.string().optional(),
+    experienceLevel: z.string().optional(),
+    linkedinUrl: z.string().optional(),
+    portfolioUrl: z.string().optional(),
+  });
 
-export const insertJobSchema = createInsertSchema(jobs).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  posterEmail: true, // Auto-captured from authenticated user
-}).extend({
-  posterRole: z.string().min(1, "Role in company is required"),
-});
+export const insertJobSchema = createInsertSchema(jobs)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+    posterEmail: true, // Auto-captured from authenticated user
+  })
+  .extend({
+    posterRole: z.string().min(1, "Role in company is required"),
+  });
 
-export const insertInternshipSchema = createInsertSchema(internships).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  posterEmail: true, // Auto-captured from authenticated user
-  isApproved: true,
-  status: true,
-  postedBy: true,
-}).extend({
-  posterRole: z.string().min(1, "Role in company is required"),
-  duration: z.string().min(1, "Duration is required"),
-  contactEmail: z.string().email("Valid contact email is required"),
-});
+export const insertInternshipSchema = createInsertSchema(internships)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+    posterEmail: true, // Auto-captured from authenticated user
+    isApproved: true,
+    status: true,
+    postedBy: true,
+  })
+  .extend({
+    posterRole: z.string().min(1, "Role in company is required"),
+    duration: z.string().min(1, "Duration is required"),
+    contactEmail: z.string().email("Valid contact email is required"),
+  });
 
 export const insertCourseSchema = createInsertSchema(courses).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertRemovedJobSchema = createInsertSchema(removedJobs).omit({
+  id: true,
+  removedAt: true,
+});
+
+export const insertRemovedInternshipSchema = createInsertSchema(
+  removedInternships
+).omit({
+  id: true,
+  removedAt: true,
 });
 
 export const insertApplicationSchema = createInsertSchema(applications).omit({
@@ -304,13 +412,17 @@ export const insertCvShowcaseSchema = createInsertSchema(cvShowcase).omit({
   updatedAt: true,
 });
 
-export const insertEmailWhitelistSchema = createInsertSchema(emailWhitelist).omit({
+export const insertEmailWhitelistSchema = createInsertSchema(
+  emailWhitelist
+).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export const insertCommunityBenefitSchema = createInsertSchema(communityBenefits).omit({
+export const insertCommunityBenefitSchema = createInsertSchema(
+  communityBenefits
+).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -325,6 +437,14 @@ export type InsertProfile = z.infer<typeof insertProfileSchema>;
 
 export type Job = typeof jobs.$inferSelect;
 export type InsertJob = z.infer<typeof insertJobSchema>;
+
+export type RemovedJob = typeof removedJobs.$inferSelect;
+export type InsertRemovedJob = z.infer<typeof insertRemovedJobSchema>;
+
+export type RemovedInternship = typeof removedInternships.$inferSelect;
+export type InsertRemovedInternship = z.infer<
+  typeof insertRemovedInternshipSchema
+>;
 
 export type Internship = typeof internships.$inferSelect;
 export type InsertInternship = z.infer<typeof insertInternshipSchema>;
@@ -342,4 +462,6 @@ export type EmailWhitelist = typeof emailWhitelist.$inferSelect;
 export type InsertEmailWhitelist = z.infer<typeof insertEmailWhitelistSchema>;
 
 export type CommunityBenefit = typeof communityBenefits.$inferSelect;
-export type InsertCommunityBenefit = z.infer<typeof insertCommunityBenefitSchema>;
+export type InsertCommunityBenefit = z.infer<
+  typeof insertCommunityBenefitSchema
+>;
