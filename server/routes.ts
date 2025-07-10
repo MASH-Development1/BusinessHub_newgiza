@@ -2781,11 +2781,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         if (newPassword && newPassword.length < 8) {
-          return res
-            .status(400)
-            .json({
-              message: "New password must be at least 8 characters long",
-            });
+          return res.status(400).json({
+            message: "New password must be at least 8 characters long",
+          });
         }
 
         // Update credentials
