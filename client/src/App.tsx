@@ -124,6 +124,7 @@ function AppRoutes() {
             <AdminComplete />
           </ProtectedRoute>
         </Route>
+
         <Route path="/careers">
           <ProtectedRoute>
             <Careers />

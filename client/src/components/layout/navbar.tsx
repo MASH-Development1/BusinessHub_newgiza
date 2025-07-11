@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Navbar() {
   const [location, navigate] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { logout } = useAuth();
+  const { logout, isAdmin } = useAuth();
   const { toast } = useToast();
 
   const handleLogout = async () => {

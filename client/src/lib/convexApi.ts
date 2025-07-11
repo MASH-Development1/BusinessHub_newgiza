@@ -224,54 +224,68 @@ export const useDeleteCourse = () => {
   });
 };
 
-// Hook to get applications
-export const useApplications = () => {
+// Hook to get profiles
+export const useProfiles = (filters?: Record<string, string>) => {
   const convex = useConvex();
   return useQuery({
-    queryKey: ["applications"],
+    queryKey: ["profiles", filters],
     queryFn: async () => {
-      const convexApplications = await convex.query(api.applications.getApplications);
-      return convexApplications.map(adaptApplication);
+      const convexProfiles = await convex.query(api.profiles.getProfiles, { filters });
+      return convexProfiles.map(adaptProfile);
     },
   });
 };
 
-// Hook to create a job application
-export const useCreateJobApplication = () => {
+// Hook to get a single profile
+export const useProfile = (id: Id<"profiles">) => {
+  const convex = useConvex();
+  return useQuery({
+    queryKey: ["profile", id],
+    queryFn: async () => {
+      const convexProfile = await convex.query(api.profiles.getProfile, { id });
+      return convexProfile ? adaptProfile(convexProfile) : null;
+    },
+    enabled: !!id,
+  });
+};
+
+// Hook to create a profile
+export const useCreateProfile = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.applications.createJobApplication, data),
+    mutationFn: (data: any) => convex.mutation(api.profiles.createProfile, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
     },
   });
 };
 
-// Hook to create an internship application
-export const useCreateInternshipApplication = () => {
+// Hook to update a profile
+export const useUpdateProfile = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.applications.createInternshipApplication, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
+      convex.mutation(api.profiles.updateProfile, { id: numberToConvexId(id), ...data }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["profile", numberToConvexId(id)] });
     },
   });
 };
 
-// Hook to update application status
-export const useUpdateApplicationStatus = () => {
+// Hook to delete a profile
+export const useDeleteProfile = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, status, notes }: { id: number; status: string; notes?: string }) =>
-      convex.mutation(api.applications.updateApplicationStatus, { id: numberToConvexId(id), status, notes }),
+    mutationFn: (id: number) => convex.mutation(api.profiles.deleteProfile, { id: numberToConvexId(id) }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ["profiles"] });
     },
   });
 };
@@ -342,68 +356,55 @@ export const useDeleteCvShowcase = () => {
   });
 };
 
-// Hook to get profiles
-export const useProfiles = (filters?: Record<string, string>) => {
+// Hook to get applications
+export const useApplications = () => {
   const convex = useConvex();
   return useQuery({
-    queryKey: ["profiles", filters],
+    queryKey: ["applications"],
     queryFn: async () => {
-      const convexProfiles = await convex.query(api.profiles.getProfiles, { filters });
-      return convexProfiles.map(adaptProfile);
+      const convexApplications = await convex.query(api.applications.getApplications);
+      return convexApplications.map(adaptApplication);
     },
   });
 };
 
-// Hook to get a single profile
-export const useProfile = (id: Id<"profiles">) => {
-  const convex = useConvex();
-  return useQuery({
-    queryKey: ["profile", id],
-    queryFn: async () => {
-      const convexProfile = await convex.query(api.profiles.getProfile, { id });
-      return convexProfile ? adaptProfile(convexProfile) : null;
-    },
-    enabled: !!id,
-  });
-};
-
-// Hook to create a profile
-export const useCreateProfile = () => {
+// Hook to create a job application
+export const useCreateJobApplication = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.profiles.createProfile, data),
+    mutationFn: (data: any) => convex.mutation(api.applications.createJobApplication, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
     },
   });
 };
 
-// Hook to update a profile
-export const useUpdateProfile = () => {
+// Hook to create an internship application
+export const useCreateInternshipApplication = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
-      convex.mutation(api.profiles.updateProfile, { id: numberToConvexId(id), ...data }),
+    mutationFn: (data: any) => convex.mutation(api.applications.createInternshipApplication, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+    },
+  });
+};
+
+// Hook to update application status
+export const useUpdateApplicationStatus = () => {
+  const convex = useConvex();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      convex.mutation(api.applications.updateApplicationStatus, { id: numberToConvexId(id), status }),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profile", numberToConvexId(id)] });
-    },
-  });
-};
-
-// Hook to delete a profile
-export const useDeleteProfile = () => {
-  const convex = useConvex();
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.profiles.deleteProfile, { id: numberToConvexId(id) }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profiles"] });
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      queryClient.invalidateQueries({ queryKey: ["application", numberToConvexId(id)] });
     },
   });
 };
@@ -420,7 +421,7 @@ export const useCommunityBenefits = (filters?: Record<string, string>) => {
   });
 };
 
-// Hook to get homepage community benefits
+// Hook to get homepage benefits
 export const useHomepageBenefits = () => {
   const convex = useConvex();
   return useQuery({
@@ -475,6 +476,17 @@ export const useDeleteCommunityBenefit = () => {
   });
 };
 
+// Hook to get stats
+export const useStats = () => {
+  const convex = useConvex();
+  return useQuery({
+    queryKey: ["stats"],
+    queryFn: async () => {
+      return await convex.query(api.stats.getStats);
+    },
+  });
+};
+
 // Hook to get whitelist
 export const useWhitelist = () => {
   const convex = useConvex();
@@ -493,8 +505,7 @@ export const useAddToWhitelist = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (data: { email: string; name?: string; unit?: string; phone?: string }) =>
-      convex.mutation(api.whitelist.addToWhitelist, data),
+    mutationFn: (data: any) => convex.mutation(api.whitelist.addToWhitelist, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["whitelist"] });
     },
@@ -507,21 +518,7 @@ export const useRemoveFromWhitelist = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: Id<"email_whitelist">) => convex.mutation(api.whitelist.removeFromWhitelist, { id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["whitelist"] });
-    },
-  });
-};
-
-// Hook to update whitelist entry
-export const useUpdateWhitelistEntry = () => {
-  const convex = useConvex();
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: ({ id, ...data }: { id: Id<"email_whitelist">; name?: string; unit?: string; phone?: string; is_active?: boolean }) =>
-      convex.mutation(api.whitelist.updateWhitelistEntry, { id, ...data }),
+    mutationFn: (id: number) => convex.mutation(api.whitelist.removeFromWhitelist, { id: numberToConvexId(id) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["whitelist"] });
     },
@@ -546,103 +543,82 @@ export const useUpdateAccessRequestStatus = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, status }: { id: Id<"access_requests">; status: "pending" | "approved" | "rejected" }) =>
-      convex.mutation(api.accessRequests.updateStatus, { id, status }),
-    onSuccess: () => {
+    mutationFn: ({ id, status }: { id: number; status: "pending" | "approved" | "rejected" }) =>
+      convex.mutation(api.accessRequests.updateStatus, { id: numberToConvexId(id), status }),
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["accessRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["accessRequest", numberToConvexId(id)] });
     },
   });
 };
 
-// Hook to get removed jobs
+// Admin hooks for removed jobs/internships
 export const useRemovedJobs = () => {
   const convex = useConvex();
   return useQuery({
     queryKey: ["removedJobs"],
-    queryFn: () => convex.query(api.admin.getRemovedJobs),
+    queryFn: async () => {
+      return await convex.query(api.admin.getRemovedJobs);
+    },
   });
 };
 
-// Hook to get removed internships
 export const useRemovedInternships = () => {
   const convex = useConvex();
   return useQuery({
     queryKey: ["removedInternships"],
-    queryFn: () => convex.query(api.admin.getRemovedInternships),
+    queryFn: async () => {
+      return await convex.query(api.admin.getRemovedInternships);
+    },
   });
 };
 
-// Hook to approve job
-export const useApproveJob = () => {
+export const useRestoreRemovedJob = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: Id<"jobs">) => convex.mutation(api.admin.approveJob, { id }),
+    mutationFn: (id: Id<"removed_jobs">) => convex.mutation(api.admin.restoreRemovedJob, { id }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["removedJobs"] });
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
   });
 };
 
-// Hook to approve internship
-export const useApproveInternship = () => {
+export const useRestoreRemovedInternship = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: Id<"internships">) => convex.mutation(api.admin.approveInternship, { id }),
+    mutationFn: (id: Id<"removed_internships">) => convex.mutation(api.admin.restoreRemovedInternship, { id }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["removedInternships"] });
       queryClient.invalidateQueries({ queryKey: ["internships"] });
     },
   });
 };
 
-// Hook to reject internship
-export const useRejectInternship = () => {
+export const usePermanentlyDeleteRemovedJob = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: Id<"internships">) => convex.mutation(api.admin.rejectInternship, { id }),
+    mutationFn: (id: Id<"removed_jobs">) => convex.mutation(api.admin.permanentlyDeleteRemovedJob, { id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["internships"] });
+      queryClient.invalidateQueries({ queryKey: ["removedJobs"] });
     },
   });
 };
 
-// Hook to approve access request
-export const useApproveAccessRequest = () => {
+export const usePermanentlyDeleteRemovedInternship = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: Id<"access_requests">) => convex.mutation(api.admin.approveAccessRequest, { id }),
+    mutationFn: (id: Id<"removed_internships">) => convex.mutation(api.admin.permanentlyDeleteRemovedInternship, { id }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accessRequests"] });
-      queryClient.invalidateQueries({ queryKey: ["whitelist"] });
+      queryClient.invalidateQueries({ queryKey: ["removedInternships"] });
     },
-  });
-};
-
-// Hook to reject access request
-export const useRejectAccessRequest = () => {
-  const convex = useConvex();
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (id: Id<"access_requests">) => convex.mutation(api.admin.rejectAccessRequest, { id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["accessRequests"] });
-    },
-  });
-};
-
-// Hook to get stats
-export const useStats = () => {
-  const convex = useConvex();
-  return useQuery({
-    queryKey: ["stats"],
-    queryFn: () => convex.query(api.stats.getStats),
   });
 }; 

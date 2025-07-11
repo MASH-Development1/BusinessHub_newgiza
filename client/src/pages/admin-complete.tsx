@@ -36,7 +36,13 @@ import {
   useAddToWhitelist,
   useRemoveFromWhitelist,
   useAccessRequests,
-  useUpdateAccessRequestStatus
+  useUpdateAccessRequestStatus,
+  useRemovedJobs,
+  useRemovedInternships,
+  useRestoreRemovedJob,
+  useRestoreRemovedInternship,
+  usePermanentlyDeleteRemovedJob,
+  usePermanentlyDeleteRemovedInternship
 } from "@/lib/convexApi";
 import { Job, Internship, Course, Profile, CommunityBenefit, Application, EmailWhitelist, AccessRequest } from "@/lib/typeAdapter";
 import {
@@ -122,6 +128,8 @@ export default function AdminComplete() {
   const { data: benefits = [] } = useCommunityBenefits();
   const { data: whitelist = [] } = useWhitelist();
   const { data: accessRequests = [] } = useAccessRequests();
+  const { data: removedJobs = [] } = useRemovedJobs();
+  const { data: removedInternships = [] } = useRemovedInternships();
 
   // Mutations
   const createJobMutation = useCreateJob();
@@ -148,6 +156,12 @@ export default function AdminComplete() {
   const removeFromWhitelistMutation = useRemoveFromWhitelist();
   const updateAccessRequestStatusMutation = useUpdateAccessRequestStatus();
 
+  // Removed items mutations
+  const restoreJobMutation = useRestoreRemovedJob();
+  const restoreInternshipMutation = useRestoreRemovedInternship();
+  const deleteRemovedJobMutation = usePermanentlyDeleteRemovedJob();
+  const deleteRemovedInternshipMutation = usePermanentlyDeleteRemovedInternship();
+
   // Helper functions
   const formatDate = (dateString: string | Date) => {
     const date = typeof dateString === "string" ? new Date(dateString) : dateString;
@@ -157,13 +171,13 @@ export default function AdminComplete() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return "pending";
+        return "secondary";
       case "accepted":
-        return "active";
+        return "default";
       case "rejected":
-        return "draft";
+        return "destructive";
       default:
-        return "draft";
+        return "secondary";
     }
   };
 
@@ -300,6 +314,39 @@ export default function AdminComplete() {
     });
   };
 
+  // Removed items handlers
+  const handleRestoreJob = (id: string) => {
+    restoreJobMutation.mutate(id as any, {
+      onSuccess: () => toast({ title: "Success", description: "Job restored successfully!" }),
+      onError: () => toast({ title: "Error", description: "Failed to restore job", variant: "destructive" })
+    });
+  };
+
+  const handleRestoreInternship = (id: string) => {
+    restoreInternshipMutation.mutate(id as any, {
+      onSuccess: () => toast({ title: "Success", description: "Internship restored successfully!" }),
+      onError: () => toast({ title: "Error", description: "Failed to restore internship", variant: "destructive" })
+    });
+  };
+
+  const handleDeleteRemovedJob = (id: string) => {
+    if (window.confirm("Are you sure you want to permanently delete this job? This action cannot be undone.")) {
+      deleteRemovedJobMutation.mutate(id as any, {
+        onSuccess: () => toast({ title: "Success", description: "Job permanently deleted!" }),
+        onError: () => toast({ title: "Error", description: "Failed to delete job", variant: "destructive" })
+      });
+    }
+  };
+
+  const handleDeleteRemovedInternship = (id: string) => {
+    if (window.confirm("Are you sure you want to permanently delete this internship? This action cannot be undone.")) {
+      deleteRemovedInternshipMutation.mutate(id as any, {
+        onSuccess: () => toast({ title: "Success", description: "Internship permanently deleted!" }),
+        onError: () => toast({ title: "Error", description: "Failed to delete internship", variant: "destructive" })
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -368,13 +415,14 @@ export default function AdminComplete() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="internships">Internships</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="benefits">Benefits</TabsTrigger>
             <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
             <TabsTrigger value="requests">Access Requests</TabsTrigger>
+            <TabsTrigger value="removed">Removed Items</TabsTrigger>
           </TabsList>
 
           {/* Jobs Tab */}
@@ -709,7 +757,9 @@ export default function AdminComplete() {
                             <h3 className="font-semibold">{course.title}</h3>
                             <p className="text-sm text-muted-foreground">{course.instructor}</p>
                             <p className="text-sm">{course.type}</p>
-                            <Badge variant={getStatusBadge(course.status)}>{course.status}</Badge>
+                            <Badge variant={course.isActive ? "default" : "secondary"}>
+                              {course.isActive ? "Active" : "Inactive"}
+                            </Badge>
                               </div>
                           <div className="flex gap-2">
                               <Button
@@ -1011,6 +1061,163 @@ export default function AdminComplete() {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Removed Items Tab */}
+          <TabsContent value="removed" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <RotateCcw className="h-5 w-5" />
+                  Manage Removed Items
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="removed-jobs" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="removed-jobs">
+                      Removed Jobs ({removedJobs?.length || 0})
+                    </TabsTrigger>
+                    <TabsTrigger value="removed-internships">
+                      Removed Internships ({removedInternships?.length || 0})
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="removed-jobs" className="space-y-4">
+                    {removedJobs?.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                        <p>No removed jobs found.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {removedJobs?.map((job) => (
+                          <Card key={job._id} className="border-l-4 border-l-red-500">
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h3 className="font-semibold">{job.title}</h3>
+                                  <p className="text-sm text-muted-foreground">{job.company}</p>
+                                  <p className="text-sm">{job.location || "Remote"}</p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <Badge variant="secondary">{job.job_type || "Full-time"}</Badge>
+                                    <Badge variant="secondary">{job.experience_level || "Any"}</Badge>
+                                    {job.salary_range && (
+                                      <Badge variant="outline">{job.salary_range}</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                                    {job.description}
+                                  </p>
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    <div>Posted by: {job.poster_email}</div>
+                                    <div>Removed at: {new Date(job.removed_at || "").toLocaleDateString()}</div>
+                                    {job.removal_reason && (
+                                      <div>Reason: {job.removal_reason}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRestoreJob(job._id)}
+                                    disabled={restoreJobMutation.isPending}
+                                  >
+                                    <RotateCcw className="h-4 w-4 mr-2" />
+                                    Restore
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteRemovedJob(job._id)}
+                                    disabled={deleteRemovedJobMutation.isPending}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="removed-internships" className="space-y-4">
+                    {removedInternships?.length === 0 ? (
+                      <div className="text-center text-muted-foreground py-8">
+                        <p>No removed internships found.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {removedInternships?.map((internship) => (
+                          <Card key={internship._id} className="border-l-4 border-l-red-500">
+                            <CardContent className="p-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h3 className="font-semibold">{internship.title}</h3>
+                                  <p className="text-sm text-muted-foreground">{internship.company}</p>
+                                  <p className="text-sm">{internship.location || "Remote"}</p>
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <Badge variant="secondary">{internship.duration}</Badge>
+                                    <Badge variant={internship.is_paid ? "default" : "secondary"}>
+                                      {internship.is_paid ? "Paid" : "Unpaid"}
+                                    </Badge>
+                                    {internship.stipend && (
+                                      <Badge variant="outline">{internship.stipend}</Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                                    {internship.description}
+                                  </p>
+                                  <div className="text-xs text-muted-foreground mt-2">
+                                    <div>Posted by: {internship.poster_email}</div>
+                                    <div>Removed at: {new Date(internship.removed_at || "").toLocaleDateString()}</div>
+                                    {internship.removal_reason && (
+                                      <div>Reason: {internship.removal_reason}</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleRestoreInternship(internship._id)}
+                                    disabled={restoreInternshipMutation.isPending}
+                                  >
+                                    <RotateCcw className="h-4 w-4 mr-2" />
+                                    Restore
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteRemovedInternship(internship._id)}
+                                    disabled={deleteRemovedInternshipMutation.isPending}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+
+                <div className="mt-6 p-4 bg-muted rounded-lg">
+                  <h3 className="font-semibold mb-2">Instructions:</h3>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• <strong>Restore:</strong> Move the item back to the active jobs/internships list</li>
+                    <li>• <strong>Delete:</strong> Permanently remove the item from the database (cannot be undone)</li>
+                    <li>• Items are automatically moved here when they are removed from the main listings</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>
