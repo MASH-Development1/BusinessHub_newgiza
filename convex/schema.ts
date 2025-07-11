@@ -238,4 +238,12 @@ export default defineSchema({
     updated_at: v.string(), // ISO8601 date string
     last_login_at: v.optional(v.union(v.string(), v.null())), // ISO8601 date string
   }).index("email", ["email"]), // Index for uniqueness check
+
+  sessions: defineTable({
+    session_id: v.string(),
+    email: v.string(),
+    is_admin: v.boolean(),
+    created_at: v.string(), // ISO8601 date string
+    expires_at: v.string(), // ISO8601 date string
+  }).index("session_id", ["session_id"]),
 });

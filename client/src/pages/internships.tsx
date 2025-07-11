@@ -23,6 +23,7 @@ import {
   FileText,
   X
 } from "lucide-react";
+import { useInternships, useCreateInternshipApplication } from "@/lib/convexApi";
 
 interface Internship {
   id: number;
@@ -74,9 +75,7 @@ export default function Internships() {
   });
 
   // Fetch internships
-  const { data: internships = [], isLoading } = useQuery({
-    queryKey: ["/api/internships"],
-  });
+  const { data: internships = [], isLoading } = useInternships();
 
   // Filter approved and active internships
   const approvedInternships = (internships as Internship[]).filter((internship: Internship) => 
@@ -122,41 +121,7 @@ export default function Internships() {
     return matchesSearch && matchesSector;
   });
 
-  const applyMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const response = await fetch(`/api/applications/internship/${selectedInternship?.id}`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to submit application: ${response.statusText}`);
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Application submitted!",
-        description: "Your internship application has been sent successfully.",
-      });
-      setShowApplication(false);
-      setSelectedInternship(null);
-      setApplicationData({
-        applicantName: "",
-        applicantEmail: "",
-        applicantPhone: "",
-        coverLetter: ""
-      });
-      setCvFile(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/applications"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Application failed",
-        description: error.message || "There was an error submitting your application.",
-        variant: "destructive",
-      });
-    },
-  });
+  const applyMutation = useCreateInternshipApplication();
 
   const handleApply = (internship: Internship) => {
     setSelectedInternship(internship);

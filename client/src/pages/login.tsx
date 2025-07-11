@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Home, AlertCircle, UserPlus } from "lucide-react";
 import HubWithinLogo from "@/components/nghb-logo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 
 export default function Login() {
   const { toast } = useToast();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showRequestForm, setShowRequestForm] = useState(false);
@@ -18,82 +22,75 @@ export default function Login() {
     unitNumber: "",
     mobile: "",
   });
+  const [, setLocation] = useLocation();
 
-  const loginMutation = useMutation({
-    mutationFn: async (email: string) => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
+  // Convex mutations
+  const loginWithEmail = useMutation(api.auth.loginWithEmail);
+  const requestAccess = useMutation(api.accessRequests.create);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({ title: "Error", description: "Please enter your email address", variant: "destructive" });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      // Login with email (checks whitelist)
+      const result = await loginWithEmail({ email });
+      // Store user session using AuthContext
+      const userData = { 
+        email: result.user.email, 
+        name: result.user.name, 
+        role: result.user.role, 
+        id: result.user._id 
+      };
+      login(userData, result.sessionId);
       toast({ title: "Welcome!", description: "Access granted. Redirecting to platform..." });
-      // Redirect to home page
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 1000);
-    },
-    onError: (error: Error) => {
+      if (result.user.role === 'admin') {
+        setLocation("/admin");
+      } else {
+        setLocation("/");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
       toast({ 
         title: "Access Denied", 
-        description: error.message,
+        description: error.message || "Unable to authenticate. Please try again or request access.",
         variant: "destructive" 
       });
-    },
-  });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const requestAccessMutation = useMutation({
-    mutationFn: async (data: typeof requestForm) => {
-      const response = await fetch('/api/auth/request-access', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+  const handleRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestForm.fullName || !requestForm.email || !requestForm.unitNumber) {
+      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
+    try {
+      await requestAccess({
+        full_name: requestForm.fullName,
+        email: requestForm.email,
+        unit_number: requestForm.unitNumber,
+        mobile: requestForm.mobile || null,
       });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Request failed');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
       toast({ 
         title: "Request Submitted", 
         description: "Your access request has been submitted. You'll receive an email once approved." 
       });
       setRequestForm({ fullName: "", email: "", unitNumber: "", mobile: "" });
       setShowRequestForm(false);
-    },
-    onError: (error: Error) => {
+    } catch (error) {
+      console.error("Request error:", error);
       toast({ 
         title: "Request Failed", 
-        description: error.message,
+        description: "Unable to submit request. Please try again.",
         variant: "destructive" 
       });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) {
-      toast({ title: "Error", description: "Please enter your email address", variant: "destructive" });
-      return;
     }
-    loginMutation.mutate(email);
-  };
-
-  const handleRequestSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!requestForm.fullName || !requestForm.email || !requestForm.unitNumber) {
-      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
-      return;
-    }
-    requestAccessMutation.mutate(requestForm);
   };
 
   return (
@@ -118,7 +115,7 @@ export default function Login() {
             <p className="text-sm text-muted-foreground">
               {showRequestForm 
                 ? "Fill out the form below to request access to the NewGiza community platform"
-                : "Enter your registered email address to access the community platform"
+                : "Enter your whitelisted email to access the community platform"
               }
             </p>
           </CardHeader>
@@ -133,7 +130,7 @@ export default function Login() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="Enter your registered email"
+                      placeholder="Enter your whitelisted email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -144,9 +141,10 @@ export default function Login() {
                   <Button 
                     type="submit" 
                     className="w-full" 
-                    disabled={loginMutation.isPending || isLoading}
+                    disabled={isLoading}
                   >
-                    {loginMutation.isPending ? "Verifying..." : "Access Platform"}
+                    {isLoading ? <span className="animate-spin mr-2 inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> : null}
+                    {isLoading ? "Verifying..." : "Access Platform"}
                   </Button>
                 </form>
 
@@ -239,9 +237,9 @@ export default function Login() {
                     <Button 
                       type="submit" 
                       className="flex-1" 
-                      disabled={requestAccessMutation.isPending}
+                      disabled={isLoading}
                     >
-                      {requestAccessMutation.isPending ? "Submitting..." : "Submit Request"}
+                      {isLoading ? "Submitting..." : "Submit Request"}
                     </Button>
                   </div>
                 </form>
@@ -269,7 +267,7 @@ export default function Login() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => window.location.href = "/admin-login"}
+                    onClick={() => setLocation("/admin-login")}
                     className="text-muted-foreground hover:text-primary"
                   >
                     Community Administrator? Click here

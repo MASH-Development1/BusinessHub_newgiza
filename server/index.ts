@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
@@ -75,11 +76,11 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use environment port for deployment or default to 5000 for development
-  const port = process.env.PORT || 5000;
+  // Use environment port for deployment or default to 3000 for development
+  const port = process.env.PORT || 3000;
   server.listen({
     port,
-    host: "0.0.0.0",
+    host: "127.0.0.1",
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);

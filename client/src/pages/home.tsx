@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useStats } from "@/lib/convexApi";
 import { Link } from "wouter";
 import HubWithinLogo from "@/components/nghb-logo";
 import CommunityBenefitsSection from "@/components/community-benefits-new";
 import { Briefcase, GraduationCap, Users, BookOpen, TrendingUp, Star, FileText } from "lucide-react";
 
 export default function Home() {
-  const { data: stats } = useQuery({
-    queryKey: ["/api/stats"],
-  });
+  const { data: stats = {} } = useStats();
 
   const features = [
     {

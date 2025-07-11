@@ -3,21 +3,23 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Navbar() {
   const [location, navigate] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { logout } = useAuth();
+  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-      window.location.href = '/';
+      await logout();
+      toast({ title: "Logged out", description: "You have been logged out." });
+      navigate("/login");
     } catch (error) {
-      console.error('Logout error:', error);
-      window.location.href = '/';
+      toast({ title: "Logout error", description: "Failed to log out.", variant: "destructive" });
+      navigate("/login");
     }
   };
 

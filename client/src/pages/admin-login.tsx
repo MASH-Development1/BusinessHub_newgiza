@@ -1,57 +1,57 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Shield } from "lucide-react";
+import { Settings } from "lucide-react";
 import HubWithinLogo from "@/components/nghb-logo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
 
 export default function AdminLogin() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [credentials, setCredentials] = useState({
-    email: "",
-    password: ""
-  });
+  const { login } = useAuth();
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
 
-  const loginMutation = useMutation({
-    mutationFn: async (data: { email: string; password: string }) => {
-      const response = await fetch('/api/auth/admin-login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Admin login failed');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({ title: "Admin Access Granted", description: "Welcome to the admin dashboard" });
-      // Invalidate auth cache to refresh user state
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      setTimeout(() => {
-        window.location.href = "/admin";
-      }, 1000);
-    },
-    onError: (error: Error) => {
-      toast({ 
-        title: "Access Denied", 
-        description: error.message,
-        variant: "destructive" 
-      });
-    },
-  });
+  // Convex mutation
+  const adminLogin = useMutation(api.auth.adminLogin);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!credentials.email || !credentials.password) {
       toast({ title: "Error", description: "Please enter both email and password", variant: "destructive" });
       return;
     }
-    loginMutation.mutate(credentials);
+    setIsLoading(true);
+    try {
+      // Admin login with entered credentials
+      const result = await adminLogin({ 
+        username: credentials.email, 
+        password: credentials.password
+      });
+      // Store admin session using AuthContext
+      const userData = { 
+        email: result.user.email, 
+        name: result.user.name, 
+        role: result.user.role, 
+        id: result.user._id 
+      };
+      login(userData, result.sessionId);
+      toast({ title: "Admin Access Granted", description: "Welcome to the admin dashboard" });
+      setLocation("/admin");
+    } catch (error: any) {
+      toast({ 
+        title: "Access Denied", 
+        description: error.message || "Invalid admin credentials. Please try again.",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -110,9 +110,10 @@ export default function AdminLogin() {
               <Button 
                 type="submit" 
                 className="w-full bg-red-600 hover:bg-red-700" 
-                disabled={loginMutation.isPending}
+                disabled={isLoading}
               >
-                {loginMutation.isPending ? "Authenticating..." : "Access Admin Panel"}
+                {isLoading ? <span className="animate-spin mr-2 inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span> : null}
+                {isLoading ? "Authenticating..." : "Access Admin Panel"}
               </Button>
             </form>
 
@@ -121,7 +122,7 @@ export default function AdminLogin() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => window.location.href = "/login"}
+                onClick={() => setLocation("/login")}
                 className="text-muted-foreground hover:text-primary"
               >
                 ← Back to Resident Login

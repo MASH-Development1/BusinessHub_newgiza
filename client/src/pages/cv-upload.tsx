@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Upload, User, CheckCircle } from "lucide-react";
 import { PROFESSIONAL_SECTIONS } from "@shared/sections";
+import { useCreateCvShowcase } from "@/lib/convexApi";
 
 export default function CvUpload() {
   const { toast } = useToast();
@@ -32,37 +33,7 @@ export default function CvUpload() {
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   // CV Upload mutation
-  const createCvMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const formData = new FormData();
-      
-      // Add all form fields
-      Object.keys(data).forEach(key => {
-        formData.append(key, data[key]);
-      });
-      
-      // Add CV file if selected
-      if (cvFile) {
-        formData.append('cv', cvFile);
-      }
-      
-      const response = await fetch('/api/cv-showcase', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!response.ok) throw new Error('Failed to create CV');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cv-showcase"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      setIsSubmitted(true);
-      toast({ title: "Success", description: "Your CV has been uploaded successfully and will be reviewed before publication" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to upload CV. Please try again.", variant: "destructive" });
-    },
-  });
+  const createCvMutation = useCreateCvShowcase();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,23 +57,15 @@ export default function CvUpload() {
       formData.append('cv', cvFile);
     }
     
-    // Submit directly using fetch
-    fetch('/api/cv-showcase', {
-      method: 'POST',
-      body: formData,
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to upload CV');
-      return response.json();
-    })
-    .then(() => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cv-showcase"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
-      setIsSubmitted(true);
-      toast({ title: "Success", description: "Your CV has been uploaded successfully!" });
-    })
-    .catch(() => {
-      toast({ title: "Error", description: "Failed to upload CV. Please try again.", variant: "destructive" });
+    // Submit using Convex mutation
+    createCvMutation.mutate(formData, {
+      onSuccess: () => {
+        setIsSubmitted(true);
+        toast({ title: "Success", description: "Your CV has been uploaded successfully!" });
+      },
+      onError: () => {
+        toast({ title: "Error", description: "Failed to upload CV. Please try again.", variant: "destructive" });
+      }
     });
   };
 

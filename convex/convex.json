@@ -1,0 +1,14 @@
+{
+  "project": {
+    "name": "business-hub-newgiza"
+  },
+  "functions": {
+    "codegen": {
+      "enabled": true
+    }
+  },
+  "auth": {
+    "enabled": true,
+    "domain": "https://business-hub-newgiza.convex.cloud"
+  }
+} 

@@ -15,8 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { CvShowcase } from "@shared/schema";
 import { CV_SHOWCASE_SECTIONS } from "@shared/sections";
-import { apiRequest } from "@/lib/queryClient";
-import api from "@/lib/api";
+import { useCvShowcase, useUpdateCvShowcase } from "@/lib/convexApi";
 import { useToast } from "@/hooks/use-toast";
 
 const editCvSchema = z.object({
@@ -40,62 +39,14 @@ export default function CvShowcase() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: cvs = [], isLoading } = useQuery<CvShowcase[]>({
-    queryKey: ["/api/cv-showcase"],
-  });
+  const { data: cvs = [], isLoading } = useCvShowcase();
 
   const { data: currentUser } = useQuery<any>({
     queryKey: ["/api/auth/me"],
     retry: false,
   });
 
-  const updateCvMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: EditCvData }) => {
-      console.log('🔄 Attempting regular CV update...');
-      console.log('📋 Document cookies:', document.cookie);
-      console.log('📝 Update data:', data);
-      console.log('🆔 CV ID:', id);
-      
-      try {
-        const response = await apiRequest(`/api/cv-showcase/${id}`, "PUT", data);
-        console.log('✅ Regular update successful');
-        return response;
-      } catch (error) {
-        console.error('❌ Regular update failed:', error);
-        throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cv-showcase"] });
-      setEditingCv(null);
-      toast({
-        title: "CV Updated",
-        description: "Your CV has been successfully updated.",
-      });
-    },
-    onError: (error: any) => {
-      console.error("Error updating CV:", error);
-      if (error.message.includes("401") || error.message.includes("Unauthorized")) {
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to edit your CV.",
-          variant: "destructive",
-        });
-      } else if (error.message.includes("403") || error.message.includes("Unauthorized to edit")) {
-        toast({
-          title: "Access Denied",
-          description: "You can only edit your own CV.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Update Failed",
-          description: "Unable to update CV. Please try again.",
-          variant: "destructive",
-        });
-      }
-    },
-  });
+  const updateCvMutation = useUpdateCvShowcase();
 
   const canEditCv = (cv: CvShowcase) => {
     if (!currentUser) return false;
@@ -380,7 +331,7 @@ export default function CvShowcase() {
           cv={editingCv} 
           isOpen={!!editingCv}
           onClose={() => setEditingCv(null)}
-          onSave={(data) => updateCvMutation.mutate({ id: editingCv.id, data })}
+          onSave={(data) => updateCvMutation.mutateAsync({ id: editingCv.id, data })}
           isLoading={updateCvMutation.isPending}
         />
       )}

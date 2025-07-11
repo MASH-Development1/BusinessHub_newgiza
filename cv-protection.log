@@ -146,3 +146,43 @@
 [2025-06-29T10:02:58.644Z] Automatic protection monitoring started
 [2025-06-29T17:53:19.071Z] CV Protection System initialized
 [2025-06-29T17:53:19.248Z] Automatic protection monitoring started
+[2025-07-10T16:05:00.188Z] CV Protection System initialized
+[2025-07-10T16:06:35.000Z] CV Protection System initialized
+[2025-07-10T16:06:48.329Z] CV Protection System initialized
+[2025-07-10T16:07:30.515Z] CV Protection System initialized
+[2025-07-10T16:07:30.637Z] Automatic protection monitoring started
+[2025-07-10T16:09:17.161Z] CV Protection System initialized
+[2025-07-10T16:09:50.711Z] CV Protection System initialized
+[2025-07-10T16:09:50.848Z] Automatic protection monitoring started
+[2025-07-10T16:11:56.035Z] CV Protection System initialized
+[2025-07-10T16:11:56.172Z] Automatic protection monitoring started
+[2025-07-10T16:14:11.131Z] CV Protection System initialized
+[2025-07-10T16:14:11.308Z] Automatic protection monitoring started
+[2025-07-10T16:24:11.370Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T16:34:11.361Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T16:38:17.081Z] CV Protection System initialized
+[2025-07-10T16:38:17.384Z] Automatic protection monitoring started
+[2025-07-10T16:48:17.468Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T17:05:44.914Z] CV Protection System initialized
+[2025-07-10T17:05:45.795Z] Automatic protection monitoring started
+[2025-07-10T17:08:06.160Z] CV Protection System initialized
+[2025-07-10T17:08:06.353Z] Automatic protection monitoring started
+[2025-07-10T17:09:19.178Z] CV Protection System initialized
+[2025-07-10T17:09:19.316Z] Automatic protection monitoring started
+[2025-07-10T17:09:56.766Z] CV Protection System initialized
+[2025-07-10T17:09:57.058Z] Automatic protection monitoring started
+[2025-07-10T17:12:13.959Z] CV Protection System initialized
+[2025-07-10T17:12:14.355Z] Automatic protection monitoring started
+[2025-07-10T17:13:29.579Z] CV Protection System initialized
+[2025-07-10T17:13:29.988Z] Automatic protection monitoring started
+[2025-07-10T17:15:12.090Z] CV Protection System initialized
+[2025-07-10T17:15:12.527Z] Automatic protection monitoring started
+[2025-07-10T17:23:45.007Z] CV Protection System initialized
+[2025-07-10T17:23:45.411Z] Automatic protection monitoring started
+[2025-07-10T17:24:11.363Z] CV Protection System initialized
+[2025-07-10T17:33:45.448Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T17:43:45.437Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T17:53:45.418Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T18:03:45.320Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T18:20:00.670Z] Protection verification: 0 verified, 0 missing
+[2025-07-10T18:24:47.091Z] ERROR creating emergency backup: Error: ENOTSUP: operation not supported on socket, copyfile '/Users/abdelrahmanmagdi/Desktop/mash/newgiza_hub/BusinessHub_newgiza/uploads/cv-files' -> '/Users/abdelrahmanmagdi/Desktop/mash/newgiza_hub/BusinessHub_newgiza/cv-backups/emergency/1752171886997/cv-files'

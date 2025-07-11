@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useProfiles, useDeleteProfile, useUpdateProfile } from "@/lib/convexApi";
 import { Users, Search, Mail, Briefcase, ExternalLink, Plus, Phone, Trash2, Eye, Edit, Upload, FileText } from "lucide-react";
 import type { Profile } from "@shared/schema";
 import { Link } from "wouter";
@@ -52,73 +53,14 @@ export default function Directory() {
   });
   const { toast } = useToast();
 
-  const { data: profiles, isLoading } = useQuery({
-    queryKey: ["/api/profiles", { search: searchTerm, industry: selectedIndustry === "All" ? undefined : selectedIndustry }],
-  });
+  const { data: profiles = [], isLoading } = useProfiles();
 
   const { data: authUser } = useQuery({
     queryKey: ["/api/auth/me"],
   });
 
-  const deleteProfileMutation = useMutation({
-    mutationFn: async (profileId: number) => {
-      const response = await fetch(`/api/profiles/${profileId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to delete profile');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/profiles"] });
-      toast({ title: "Success", description: "Profile deleted successfully" });
-    },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to delete profile", variant: "destructive" });
-    },
-  });
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: { id: number; profileData: any; cvFile?: File | null }) => {
-      const formData = new FormData();
-      
-      // Add profile data to FormData
-      Object.keys(data.profileData).forEach(key => {
-        if (data.profileData[key] !== null && data.profileData[key] !== undefined) {
-          formData.append(key, data.profileData[key]);
-        }
-      });
-      
-      // Add CV file if provided
-      if (data.cvFile) {
-        formData.append('cv', data.cvFile);
-      }
-      
-      const response = await fetch(`/api/profiles/${data.id}`, {
-        method: "PUT",
-        body: formData,
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update profile");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
-      setEditingProfile(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/profiles"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update profile",
-        variant: "destructive",
-      });
-    },
-  });
+  const deleteProfileMutation = useDeleteProfile();
+  const updateProfileMutation = useUpdateProfile();
 
   const handleEditProfile = (profile: Profile) => {
     setEditingProfile(profile);

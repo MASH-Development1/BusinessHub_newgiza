@@ -1,46 +1,14 @@
-import { useEffect, useState } from "react";
+import { useInternships } from "@/lib/convexApi";
 
 export default function TestPending() {
-  const [data, setData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: internships = [], isLoading, error } = useInternships();
+  
+  // Filter pending internships on the client side
+  const pendingInternships = internships.filter((internship: any) => 
+    internship.status === 'pending' || !internship.isApproved
+  );
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        console.log('Fetching pending internships...');
-        const response = await fetch('/api/admin/internships/pending', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include'
-        });
-        
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        console.log('Raw API response:', result);
-        console.log('Number of pending internships:', result.length);
-        
-        setData(result);
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-black text-white p-8">
         <h1 className="text-2xl font-bold text-orange-400 mb-4">Loading Test Page</h1>
@@ -53,7 +21,7 @@ export default function TestPending() {
     return (
       <div className="min-h-screen bg-black text-white p-8">
         <h1 className="text-2xl font-bold text-red-400 mb-4">Error Loading Data</h1>
-        <div className="text-red-300 mb-4">Error: {error}</div>
+        <div className="text-red-300 mb-4">Error: {error.message || 'Unknown error'}</div>
       </div>
     );
   }
@@ -63,14 +31,14 @@ export default function TestPending() {
       <h1 className="text-2xl font-bold text-orange-400 mb-4">Pending Internships Test</h1>
       
       <div className="mb-6">
-        <div className="text-green-400 text-lg">✓ API Connection Working</div>
-        <div className="text-gray-300">Found {data?.length || 0} pending internships</div>
+        <div className="text-green-400 text-lg">✓ Convex Connection Working</div>
+        <div className="text-gray-300">Found {pendingInternships.length} pending internships</div>
       </div>
 
       <div className="space-y-4">
-        {data && data.length > 0 ? (
-          data.map((internship: any) => (
-            <div key={internship.id} className="bg-gray-900 border border-gray-700 rounded-lg p-6">
+        {pendingInternships.length > 0 ? (
+          pendingInternships.map((internship: any) => (
+            <div key={internship._id} className="bg-gray-900 border border-gray-700 rounded-lg p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-xl font-semibold text-white">{internship.title}</h3>
@@ -96,13 +64,13 @@ export default function TestPending() {
               <div className="mt-4 flex gap-3">
                 <button 
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-                  onClick={() => console.log('Approve internship:', internship.id)}
+                  onClick={() => console.log('Approve internship:', internship._id)}
                 >
                   Approve
                 </button>
                 <button 
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                  onClick={() => console.log('Reject internship:', internship.id)}
+                  onClick={() => console.log('Reject internship:', internship._id)}
                 >
                   Reject
                 </button>
@@ -115,9 +83,9 @@ export default function TestPending() {
       </div>
       
       <div className="mt-8 p-4 bg-gray-900 rounded">
-        <h3 className="text-lg font-semibold text-white mb-2">Raw API Response:</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">Raw Convex Response:</h3>
         <pre className="text-xs text-gray-300 overflow-auto">
-          {JSON.stringify(data, null, 2)}
+          {JSON.stringify(pendingInternships, null, 2)}
         </pre>
       </div>
     </div>
