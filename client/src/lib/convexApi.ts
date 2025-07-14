@@ -55,7 +55,7 @@ export const useJob = (id: Id<"jobs">) => {
 export const useCreateJob = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: any) => convex.mutation(api.jobs.createJob, data),
     onSuccess: () => {
@@ -68,13 +68,18 @@ export const useCreateJob = () => {
 export const useUpdateJob = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
-      convex.mutation(api.jobs.updateJob, { id: numberToConvexId(id), ...data }),
+      convex.mutation(api.jobs.updateJob, {
+        id: numberToConvexId(id),
+        ...data,
+      }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
-      queryClient.invalidateQueries({ queryKey: ["job", numberToConvexId(id)] });
+      queryClient.invalidateQueries({
+        queryKey: ["job", numberToConvexId(id)],
+      });
     },
   });
 };
@@ -83,9 +88,10 @@ export const useUpdateJob = () => {
 export const useDeleteJob = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.jobs.deleteJob, { id: numberToConvexId(id) }),
+    mutationFn: (id: number) =>
+      convex.mutation(api.jobs.deleteJob, { id: numberToConvexId(id) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
@@ -98,7 +104,10 @@ export const useInternships = (filters?: Record<string, string>) => {
   return useQuery({
     queryKey: ["internships", filters],
     queryFn: async () => {
-      const convexInternships = await convex.query(api.internships.getInternships, { filters });
+      const convexInternships = await convex.query(
+        api.internships.getInternships,
+        { filters }
+      );
       return convexInternships.map(adaptInternship);
     },
   });
@@ -110,7 +119,10 @@ export const useInternship = (id: Id<"internships">) => {
   return useQuery({
     queryKey: ["internship", id],
     queryFn: async () => {
-      const convexInternship = await convex.query(api.internships.getInternship, { id });
+      const convexInternship = await convex.query(
+        api.internships.getInternship,
+        { id }
+      );
       return convexInternship ? adaptInternship(convexInternship) : null;
     },
     enabled: !!id,
@@ -121,9 +133,10 @@ export const useInternship = (id: Id<"internships">) => {
 export const useCreateInternship = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.internships.createInternship, data),
+    mutationFn: (data: any) =>
+      convex.mutation(api.internships.createInternship, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["internships"] });
     },
@@ -134,13 +147,18 @@ export const useCreateInternship = () => {
 export const useUpdateInternship = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
-      convex.mutation(api.internships.updateInternship, { id: numberToConvexId(id), ...data }),
+      convex.mutation(api.internships.updateInternship, {
+        id: numberToConvexId(id),
+        ...data,
+      }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["internships"] });
-      queryClient.invalidateQueries({ queryKey: ["internship", numberToConvexId(id)] });
+      queryClient.invalidateQueries({
+        queryKey: ["internship", numberToConvexId(id)],
+      });
     },
   });
 };
@@ -149,9 +167,12 @@ export const useUpdateInternship = () => {
 export const useDeleteInternship = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.internships.deleteInternship, { id: numberToConvexId(id) }),
+    mutationFn: (id: number) =>
+      convex.mutation(api.internships.deleteInternship, {
+        id: numberToConvexId(id),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["internships"] });
     },
@@ -164,7 +185,9 @@ export const useCourses = (filters?: Record<string, string>) => {
   return useQuery({
     queryKey: ["courses", filters],
     queryFn: async () => {
-      const convexCourses = await convex.query(api.courses.getCourses, { filters });
+      const convexCourses = await convex.query(api.courses.getCourses, {
+        filters,
+      });
       return convexCourses.map(adaptCourse);
     },
   });
@@ -187,7 +210,7 @@ export const useCourse = (id: Id<"courses">) => {
 export const useCreateCourse = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: any) => convex.mutation(api.courses.createCourse, data),
     onSuccess: () => {
@@ -200,13 +223,18 @@ export const useCreateCourse = () => {
 export const useUpdateCourse = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
-      convex.mutation(api.courses.updateCourse, { id: numberToConvexId(id), ...data }),
+      convex.mutation(api.courses.updateCourse, {
+        id: numberToConvexId(id),
+        ...data,
+      }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["courses"] });
-      queryClient.invalidateQueries({ queryKey: ["course", numberToConvexId(id)] });
+      queryClient.invalidateQueries({
+        queryKey: ["course", numberToConvexId(id)],
+      });
     },
   });
 };
@@ -215,9 +243,10 @@ export const useUpdateCourse = () => {
 export const useDeleteCourse = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.courses.deleteCourse, { id: numberToConvexId(id) }),
+    mutationFn: (id: number) =>
+      convex.mutation(api.courses.deleteCourse, { id: numberToConvexId(id) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courses"] });
     },
@@ -230,7 +259,9 @@ export const useProfiles = (filters?: Record<string, string>) => {
   return useQuery({
     queryKey: ["profiles", filters],
     queryFn: async () => {
-      const convexProfiles = await convex.query(api.profiles.getProfiles, { filters });
+      const convexProfiles = await convex.query(api.profiles.getProfiles, {
+        filters,
+      });
       return convexProfiles.map(adaptProfile);
     },
   });
@@ -253,9 +284,10 @@ export const useProfile = (id: Id<"profiles">) => {
 export const useCreateProfile = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.profiles.createProfile, data),
+    mutationFn: (data: any) =>
+      convex.mutation(api.profiles.createProfile, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
     },
@@ -266,13 +298,18 @@ export const useCreateProfile = () => {
 export const useUpdateProfile = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
-      convex.mutation(api.profiles.updateProfile, { id: numberToConvexId(id), ...data }),
+      convex.mutation(api.profiles.updateProfile, {
+        id: numberToConvexId(id),
+        ...data,
+      }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      queryClient.invalidateQueries({ queryKey: ["profile", numberToConvexId(id)] });
+      queryClient.invalidateQueries({
+        queryKey: ["profile", numberToConvexId(id)],
+      });
     },
   });
 };
@@ -281,9 +318,10 @@ export const useUpdateProfile = () => {
 export const useDeleteProfile = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.profiles.deleteProfile, { id: numberToConvexId(id) }),
+    mutationFn: (id: number) =>
+      convex.mutation(api.profiles.deleteProfile, { id: numberToConvexId(id) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
     },
@@ -296,7 +334,9 @@ export const useCvShowcase = (filters?: Record<string, string>) => {
   return useQuery({
     queryKey: ["cvShowcase", filters],
     queryFn: async () => {
-      const convexCvs = await convex.query(api.cvShowcase.getCvShowcase, { filters });
+      const convexCvs = await convex.query(api.cvShowcase.getCvShowcase, {
+        filters,
+      });
       return convexCvs.map(adaptCvShowcase);
     },
   });
@@ -319,9 +359,10 @@ export const useCv = (id: Id<"cv_showcase">) => {
 export const useCreateCvShowcase = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.cvShowcase.createCvShowcase, data),
+    mutationFn: (data: any) =>
+      convex.mutation(api.cvShowcase.createCvShowcase, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cvShowcase"] });
     },
@@ -332,10 +373,13 @@ export const useCreateCvShowcase = () => {
 export const useUpdateCvShowcase = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
-      convex.mutation(api.cvShowcase.updateCvShowcase, { id: numberToConvexId(id), ...data }),
+      convex.mutation(api.cvShowcase.updateCvShowcase, {
+        id: numberToConvexId(id),
+        ...data,
+      }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["cvShowcase"] });
       queryClient.invalidateQueries({ queryKey: ["cv", numberToConvexId(id)] });
@@ -347,9 +391,12 @@ export const useUpdateCvShowcase = () => {
 export const useDeleteCvShowcase = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.cvShowcase.deleteCvShowcase, { id: numberToConvexId(id) }),
+    mutationFn: (id: number) =>
+      convex.mutation(api.cvShowcase.deleteCvShowcase, {
+        id: numberToConvexId(id),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cvShowcase"] });
     },
@@ -362,7 +409,9 @@ export const useApplications = () => {
   return useQuery({
     queryKey: ["applications"],
     queryFn: async () => {
-      const convexApplications = await convex.query(api.applications.getApplications);
+      const convexApplications = await convex.query(
+        api.applications.getApplications
+      );
       return convexApplications.map(adaptApplication);
     },
   });
@@ -372,9 +421,10 @@ export const useApplications = () => {
 export const useCreateJobApplication = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.applications.createJobApplication, data),
+    mutationFn: (data: any) =>
+      convex.mutation(api.applications.createJobApplication, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
     },
@@ -385,9 +435,10 @@ export const useCreateJobApplication = () => {
 export const useCreateInternshipApplication = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.applications.createInternshipApplication, data),
+    mutationFn: (data: any) =>
+      convex.mutation(api.applications.createInternshipApplication, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
     },
@@ -398,13 +449,18 @@ export const useCreateInternshipApplication = () => {
 export const useUpdateApplicationStatus = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, status }: { id: number; status: string }) =>
-      convex.mutation(api.applications.updateApplicationStatus, { id: numberToConvexId(id), status }),
+      convex.mutation(api.applications.updateApplicationStatus, {
+        id: numberToConvexId(id),
+        status,
+      }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
-      queryClient.invalidateQueries({ queryKey: ["application", numberToConvexId(id)] });
+      queryClient.invalidateQueries({
+        queryKey: ["application", numberToConvexId(id)],
+      });
     },
   });
 };
@@ -415,7 +471,10 @@ export const useCommunityBenefits = (filters?: Record<string, string>) => {
   return useQuery({
     queryKey: ["communityBenefits", filters],
     queryFn: async () => {
-      const convexBenefits = await convex.query(api.communityBenefits.getCommunityBenefits, { filters });
+      const convexBenefits = await convex.query(
+        api.communityBenefits.getCommunityBenefits,
+        { filters }
+      );
       return convexBenefits.map(adaptCommunityBenefit);
     },
   });
@@ -427,7 +486,9 @@ export const useHomepageBenefits = () => {
   return useQuery({
     queryKey: ["homepageBenefits"],
     queryFn: async () => {
-      const convexBenefits = await convex.query(api.communityBenefits.getHomepageBenefits);
+      const convexBenefits = await convex.query(
+        api.communityBenefits.getHomepageBenefits
+      );
       return convexBenefits.map(adaptCommunityBenefit);
     },
   });
@@ -437,9 +498,10 @@ export const useHomepageBenefits = () => {
 export const useCreateCommunityBenefit = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.communityBenefits.createCommunityBenefit, data),
+    mutationFn: (data: any) =>
+      convex.mutation(api.communityBenefits.createCommunityBenefit, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["communityBenefits"] });
       queryClient.invalidateQueries({ queryKey: ["homepageBenefits"] });
@@ -451,10 +513,13 @@ export const useCreateCommunityBenefit = () => {
 export const useUpdateCommunityBenefit = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
-      convex.mutation(api.communityBenefits.updateCommunityBenefit, { id: numberToConvexId(id), ...data }),
+      convex.mutation(api.communityBenefits.updateCommunityBenefit, {
+        id: numberToConvexId(id),
+        ...data,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["communityBenefits"] });
       queryClient.invalidateQueries({ queryKey: ["homepageBenefits"] });
@@ -466,9 +531,12 @@ export const useUpdateCommunityBenefit = () => {
 export const useDeleteCommunityBenefit = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.communityBenefits.deleteCommunityBenefit, { id: numberToConvexId(id) }),
+    mutationFn: (id: number) =>
+      convex.mutation(api.communityBenefits.deleteCommunityBenefit, {
+        id: numberToConvexId(id),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["communityBenefits"] });
       queryClient.invalidateQueries({ queryKey: ["homepageBenefits"] });
@@ -503,9 +571,10 @@ export const useWhitelist = () => {
 export const useAddToWhitelist = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (data: any) => convex.mutation(api.whitelist.addToWhitelist, data),
+    mutationFn: (data: any) =>
+      convex.mutation(api.whitelist.addToWhitelist, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["whitelist"] });
     },
@@ -516,9 +585,10 @@ export const useAddToWhitelist = () => {
 export const useRemoveFromWhitelist = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: number) => convex.mutation(api.whitelist.removeFromWhitelist, { id: numberToConvexId(id) }),
+    mutationFn: (id: string) =>
+      convex.mutation(api.whitelist.removeFromWhitelist, { id: id as any }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["whitelist"] });
     },
@@ -541,13 +611,24 @@ export const useAccessRequests = () => {
 export const useUpdateAccessRequestStatus = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: "pending" | "approved" | "rejected" }) =>
-      convex.mutation(api.accessRequests.updateStatus, { id: numberToConvexId(id), status }),
+    mutationFn: ({
+      id,
+      status,
+    }: {
+      id: number;
+      status: "pending" | "approved" | "rejected";
+    }) =>
+      convex.mutation(api.accessRequests.updateStatus, {
+        id: numberToConvexId(id),
+        status,
+      }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["accessRequests"] });
-      queryClient.invalidateQueries({ queryKey: ["accessRequest", numberToConvexId(id)] });
+      queryClient.invalidateQueries({
+        queryKey: ["accessRequest", numberToConvexId(id)],
+      });
     },
   });
 };
@@ -576,9 +657,10 @@ export const useRemovedInternships = () => {
 export const useRestoreRemovedJob = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: Id<"removed_jobs">) => convex.mutation(api.admin.restoreRemovedJob, { id }),
+    mutationFn: (id: Id<"removed_jobs">) =>
+      convex.mutation(api.admin.restoreRemovedJob, { id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["removedJobs"] });
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -589,9 +671,10 @@ export const useRestoreRemovedJob = () => {
 export const useRestoreRemovedInternship = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: Id<"removed_internships">) => convex.mutation(api.admin.restoreRemovedInternship, { id }),
+    mutationFn: (id: Id<"removed_internships">) =>
+      convex.mutation(api.admin.restoreRemovedInternship, { id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["removedInternships"] });
       queryClient.invalidateQueries({ queryKey: ["internships"] });
@@ -602,9 +685,10 @@ export const useRestoreRemovedInternship = () => {
 export const usePermanentlyDeleteRemovedJob = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: Id<"removed_jobs">) => convex.mutation(api.admin.permanentlyDeleteRemovedJob, { id }),
+    mutationFn: (id: Id<"removed_jobs">) =>
+      convex.mutation(api.admin.permanentlyDeleteRemovedJob, { id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["removedJobs"] });
     },
@@ -614,11 +698,12 @@ export const usePermanentlyDeleteRemovedJob = () => {
 export const usePermanentlyDeleteRemovedInternship = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: (id: Id<"removed_internships">) => convex.mutation(api.admin.permanentlyDeleteRemovedInternship, { id }),
+    mutationFn: (id: Id<"removed_internships">) =>
+      convex.mutation(api.admin.permanentlyDeleteRemovedInternship, { id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["removedInternships"] });
     },
   });
-}; 
+};

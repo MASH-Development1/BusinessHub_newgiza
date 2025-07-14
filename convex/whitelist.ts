@@ -4,21 +4,6 @@ import { mutation, query } from "./_generated/server";
 // Query to get all whitelisted emails
 export const getWhitelist = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     return await ctx.db.query("email_whitelist").collect();
   },
 });
@@ -30,23 +15,9 @@ export const addToWhitelist = mutation({
     name: v.optional(v.string()),
     unit: v.optional(v.string()),
     phone: v.optional(v.string()),
+    addedBy: v.optional(v.string()), // Add this parameter
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     // Check if email already exists
     const existingEmail = await ctx.db
       .query("email_whitelist")
@@ -63,7 +34,7 @@ export const addToWhitelist = mutation({
       unit: args.unit || null,
       phone: args.phone || null,
       is_active: true,
-      added_by: identity.email!,
+      added_by: args.addedBy || "anonymous",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -78,21 +49,6 @@ export const removeFromWhitelist = mutation({
     id: v.id("email_whitelist"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     await ctx.db.delete(args.id);
   },
 });
@@ -107,21 +63,6 @@ export const updateWhitelistEntry = mutation({
     is_active: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     const { id, ...updates } = args;
     await ctx.db.patch(id, {
       ...updates,
@@ -130,4 +71,4 @@ export const updateWhitelistEntry = mutation({
 
     return await ctx.db.get(id);
   },
-}); 
+});

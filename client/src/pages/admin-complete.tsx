@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   useJobs,
   useInternships,
@@ -91,6 +92,7 @@ import {
 
 export default function AdminComplete() {
   const { toast } = useToast();
+  const { user } = useAuth(); // Add this line to get current user
 
   // Form states
   const [jobForm, setJobForm] = useState({
@@ -348,6 +350,7 @@ export default function AdminComplete() {
         name: whitelistForm.name || undefined,
         unit: whitelistForm.unit || undefined,
         phone: whitelistForm.phone || undefined,
+        addedBy: user?.email || "admin", // Pass current user's email
       },
       {
         onSuccess: () => {

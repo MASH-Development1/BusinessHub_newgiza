@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 
 interface User {
   email: string;
@@ -24,7 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
@@ -40,16 +46,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Get session ID from localStorage on mount
   useEffect(() => {
-    const storedSessionId = localStorage.getItem('sessionId');
+    const storedSessionId = localStorage.getItem("sessionId");
     if (storedSessionId) {
       setSessionId(storedSessionId);
-      console.log('[AuthContext] Loaded sessionId from localStorage:', storedSessionId);
+      console.log(
+        "[AuthContext] Loaded sessionId from localStorage:",
+        storedSessionId
+      );
     }
     setIsLoading(false);
   }, []);
 
   // Query current user using session ID
-  const authData = useQuery(api.auth.getCurrentUser, sessionId ? { sessionId } : "skip");
+  const authData = useQuery(
+    api.auth.getCurrentUser,
+    sessionId ? { sessionId } : "skip"
+  );
 
   // Update user state when auth data changes
   useEffect(() => {
@@ -60,10 +72,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         role: authData.user.role,
         id: authData.user._id,
       });
-      console.log('[AuthContext] Updated user from Convex:', authData.user);
+      console.log("[AuthContext] Updated user from Convex:", authData.user);
     } else {
       setUser(null);
-      console.log('[AuthContext] No user from Convex, set user to null');
+      console.log("[AuthContext] No user from Convex, set user to null");
     }
   }, [authData]);
 
@@ -71,8 +83,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(userData);
     setSessionId(newSessionId);
     setIsLoading(false);
-    localStorage.setItem('sessionId', newSessionId);
-    console.log('[AuthContext] Login called. User:', userData, 'SessionId:', newSessionId);
+    localStorage.setItem("sessionId", newSessionId);
+    console.log(
+      "[AuthContext] Login called. User:",
+      userData,
+      "SessionId:",
+      newSessionId
+    );
   };
 
   const logoutMutation = useMutation(api.auth.logout);
@@ -81,16 +98,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (sessionId) {
       try {
         await logoutMutation({ sessionId });
-        console.log('[AuthContext] Logout mutation successful');
+        console.log("[AuthContext] Logout mutation successful");
       } catch (error) {
-        console.error('[AuthContext] Logout error:', error);
+        console.error("[AuthContext] Logout error:", error);
       }
     }
     setUser(null);
     setSessionId(null);
     setIsLoading(false);
-    localStorage.removeItem('sessionId');
-    console.log('[AuthContext] Logged out, cleared session and user');
+    localStorage.removeItem("sessionId");
+    console.log("[AuthContext] Logged out, cleared session and user");
   };
 
   const isAuthenticated = !!user;
@@ -106,9 +123,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     sessionId,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-}; 
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};

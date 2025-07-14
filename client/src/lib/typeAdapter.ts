@@ -161,7 +161,7 @@ export interface User {
 }
 
 export interface EmailWhitelist {
-  id: number;
+  id: string; // Changed from number to string
   email: string;
   name: string | null;
   unit: string | null;
@@ -339,7 +339,9 @@ export function adaptApplication(convexApplication: any): Application {
     cvFileName: convexApplication.cv_file_name,
     cvFilePath: convexApplication.cv_file_path,
     jobId: convexApplication.job_id ? parseInt(convexApplication.job_id) : null,
-    internshipId: convexApplication.internship_id ? parseInt(convexApplication.internship_id) : null,
+    internshipId: convexApplication.internship_id
+      ? parseInt(convexApplication.internship_id)
+      : null,
     status: convexApplication.status,
     notes: convexApplication.notes,
     createdAt: convexApplication.created_at,
@@ -361,7 +363,7 @@ export function adaptUser(convexUser: any): User {
 
 export function adaptEmailWhitelist(convexWhitelist: any): EmailWhitelist {
   return {
-    id: parseInt(convexWhitelist._id),
+    id: convexWhitelist._id, // Keep as string (Convex ID)
     email: convexWhitelist.email,
     name: convexWhitelist.name,
     unit: convexWhitelist.unit,
@@ -394,4 +396,4 @@ export function convexIdToNumber(convexId: Id<any>): number {
 // Helper function to convert number to Convex ID (for mutations)
 export function numberToConvexId(id: number): Id<any> {
   return id.toString() as Id<any>;
-} 
+}
