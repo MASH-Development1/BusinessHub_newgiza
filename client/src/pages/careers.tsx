@@ -4,18 +4,49 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, Clock, Star, Plus, MapPin, Building2, DollarSign } from "lucide-react";
+import {
+  Briefcase,
+  Clock,
+  Star,
+  Plus,
+  MapPin,
+  Building2,
+  DollarSign,
+} from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import ApplicationModal from "@/components/modals/application-modal";
+import { useJobs } from "@/lib/convexApi";
+import { useAuth } from "@/contexts/AuthContext";
 
 const jobSchema = z.object({
   title: z.string().min(2, "Job title must be at least 2 characters"),
@@ -37,7 +68,7 @@ type JobFormData = z.infer<typeof jobSchema>;
 
 const industries = [
   "Technology/IT",
-  "Marketing", 
+  "Marketing",
   "Finance",
   "Human Resources",
   "Sales",
@@ -50,12 +81,12 @@ const industries = [
   "Design",
   "Consulting",
   "Real Estate",
-  "Other"
+  "Other",
 ];
 
 const roles = [
   "CEO",
-  "CTO", 
+  "CTO",
   "CFO",
   "COO",
   "Vice President",
@@ -71,7 +102,7 @@ const roles = [
   "Manager",
   "Supervisor",
   "Staff Member",
-  "Other"
+  "Other",
 ];
 
 export default function Careers() {
@@ -82,19 +113,15 @@ export default function Careers() {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
-  const { data: jobs = [], isLoading } = useQuery({
-    queryKey: ["/api/jobs"],
-  });
-
-  const { data: currentUser } = useQuery<any>({
-    queryKey: ["/api/auth/me"],
-    retry: false,
-  });
+  const { data: jobs = [] } = useJobs();
+  const { user: currentUser } = useAuth();
 
   // Filter jobs based on industry and search
   const filteredJobs = jobs.filter((job: any) => {
-    const matchesIndustry = selectedIndustry === "all" || job.industry === selectedIndustry;
-    const matchesSearch = searchQuery === "" || 
+    const matchesIndustry =
+      selectedIndustry === "all" || job.industry === selectedIndustry;
+    const matchesSearch =
+      searchQuery === "" ||
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -126,12 +153,12 @@ export default function Careers() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || "Failed to post job");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -157,7 +184,9 @@ export default function Careers() {
   };
 
   // Only show approved and active jobs to regular users
-  const approvedJobs = Array.isArray(jobs) ? jobs.filter(job => job.isApproved && job.isActive) : [];
+  const approvedJobs = Array.isArray(jobs)
+    ? jobs.filter((job) => job.isApproved && job.isActive)
+    : [];
 
   return (
     <div className="page-section">
@@ -173,7 +202,7 @@ export default function Careers() {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
             Discover exclusive job opportunities within the NewGiza community
           </p>
-          
+
           <Dialog open={isPostJobOpen} onOpenChange={setIsPostJobOpen}>
             <DialogTrigger asChild>
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
@@ -185,12 +214,16 @@ export default function Careers() {
               <DialogHeader>
                 <DialogTitle>Post a New Job</DialogTitle>
                 <DialogDescription>
-                  Submit a job posting for admin approval. Your posting will be reviewed and published once approved.
+                  Submit a job posting for admin approval. Your posting will be
+                  reviewed and published once approved.
                 </DialogDescription>
               </DialogHeader>
-              
+
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={form.control}
                     name="title"
@@ -198,13 +231,16 @@ export default function Careers() {
                       <FormItem>
                         <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g., Senior Software Engineer" {...field} />
+                          <Input
+                            placeholder="e.g., Senior Software Engineer"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="company"
@@ -218,7 +254,7 @@ export default function Careers() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="posterRole"
@@ -229,7 +265,10 @@ export default function Careers() {
                           <SearchableSelect
                             value={field.value}
                             onValueChange={field.onChange}
-                            options={roles.map((role) => ({ value: role, label: role }))}
+                            options={roles.map((role) => ({
+                              value: role,
+                              label: role,
+                            }))}
                             placeholder="Select your role"
                             searchPlaceholder="Search roles..."
                           />
@@ -238,7 +277,7 @@ export default function Careers() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -247,13 +286,16 @@ export default function Careers() {
                         <FormItem>
                           <FormLabel>Location</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Cairo, Egypt" {...field} />
+                            <Input
+                              placeholder="e.g., Cairo, Egypt"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="salaryRange"
@@ -261,14 +303,17 @@ export default function Careers() {
                         <FormItem>
                           <FormLabel>Salary Range (Optional)</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., 15,000 - 25,000 EGP" {...field} />
+                            <Input
+                              placeholder="e.g., 15,000 - 25,000 EGP"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-4">
                     <FormField
                       control={form.control}
@@ -283,8 +328,11 @@ export default function Careers() {
                               options={[
                                 { value: "Entry Level", label: "Entry Level" },
                                 { value: "Mid Level", label: "Mid Level" },
-                                { value: "Senior Level", label: "Senior Level" },
-                                { value: "Executive", label: "Executive" }
+                                {
+                                  value: "Senior Level",
+                                  label: "Senior Level",
+                                },
+                                { value: "Executive", label: "Executive" },
                               ]}
                               placeholder="Select level"
                               searchPlaceholder="Search experience levels..."
@@ -294,7 +342,7 @@ export default function Careers() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="industry"
@@ -305,7 +353,10 @@ export default function Careers() {
                             <SearchableSelect
                               value={field.value}
                               onValueChange={field.onChange}
-                              options={industries.map((industry) => ({ value: industry, label: industry }))}
+                              options={industries.map((industry) => ({
+                                value: industry,
+                                label: industry,
+                              }))}
                               placeholder="Select industry"
                               searchPlaceholder="Search industries..."
                             />
@@ -314,7 +365,7 @@ export default function Careers() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="jobType"
@@ -329,7 +380,7 @@ export default function Careers() {
                                 { value: "Full-time", label: "Full-time" },
                                 { value: "Part-time", label: "Part-time" },
                                 { value: "Contract", label: "Contract" },
-                                { value: "Remote", label: "Remote" }
+                                { value: "Remote", label: "Remote" },
                               ]}
                               placeholder="Select type"
                               searchPlaceholder="Search job types..."
@@ -340,7 +391,7 @@ export default function Careers() {
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name="description"
@@ -348,17 +399,17 @@ export default function Careers() {
                       <FormItem>
                         <FormLabel>Job Description</FormLabel>
                         <FormControl>
-                          <Textarea 
+                          <Textarea
                             placeholder="Describe the role, responsibilities, and what you're looking for..."
                             rows={4}
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="requirements"
@@ -366,17 +417,17 @@ export default function Careers() {
                       <FormItem>
                         <FormLabel>Requirements (Optional)</FormLabel>
                         <FormControl>
-                          <Textarea 
+                          <Textarea
                             placeholder="List the required skills, qualifications, and experience..."
                             rows={3}
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="skills"
@@ -384,9 +435,9 @@ export default function Careers() {
                       <FormItem>
                         <FormLabel>Required Skills *</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             placeholder="e.g., JavaScript, React, Node.js, SQL"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormMessage />
@@ -399,16 +450,19 @@ export default function Careers() {
                     name="contactEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Contact Email* (Visible to Admins Only)</FormLabel>
+                        <FormLabel>
+                          Contact Email* (Visible to Admins Only)
+                        </FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             type="email"
                             placeholder="recruiter@company.com"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          This email will only be visible to admins for applicant management
+                          This email will only be visible to admins for
+                          applicant management
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -420,36 +474,41 @@ export default function Careers() {
                     name="contactPhone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Contact Phone* (Visible to Admins Only)</FormLabel>
+                        <FormLabel>
+                          Contact Phone* (Visible to Admins Only)
+                        </FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             type="tel"
                             placeholder="+20 10 1234 5678"
-                            {...field} 
+                            {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          This phone number will only be visible to admins for applicant management
+                          This phone number will only be visible to admins for
+                          applicant management
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="flex justify-end gap-4 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={() => setIsPostJobOpen(false)}
                     >
                       Cancel
                     </Button>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={postJobMutation.isPending}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
-                      {postJobMutation.isPending ? "Posting..." : "Submit for Approval"}
+                      {postJobMutation.isPending
+                        ? "Posting..."
+                        : "Submit for Approval"}
                     </Button>
                   </div>
                 </form>
@@ -473,7 +532,10 @@ export default function Careers() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Industry</label>
-              <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+              <Select
+                value={selectedIndustry}
+                onValueChange={setSelectedIndustry}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select industry" />
                 </SelectTrigger>
@@ -494,19 +556,19 @@ export default function Careers() {
         </div>
 
         {/* Job Listings */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">Loading job opportunities...</p>
-          </div>
-        ) : filteredJobs.length > 0 ? (
+        {filteredJobs.length > 0 ? (
           <div className="grid gap-6">
             {filteredJobs.map((job) => (
-              <Card key={job.id} className="hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+              <Card
+                key={job.id}
+                className="hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+              >
                 <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <CardTitle className="text-xl mb-3 text-gray-900 dark:text-white font-bold">{job.title}</CardTitle>
+                      <CardTitle className="text-xl mb-3 text-gray-900 dark:text-white font-bold">
+                        {job.title}
+                      </CardTitle>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                         <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                           <Building2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
@@ -514,28 +576,42 @@ export default function Careers() {
                         </div>
                         <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                           <MapPin className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          <span>{job.location || 'Location not specified'}</span>
+                          <span>
+                            {job.location || "Location not specified"}
+                          </span>
                         </div>
                         {job.salaryRange && (
                           <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                             <DollarSign className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                            <span className="font-medium text-gray-800 dark:text-gray-200">{job.salaryRange}</span>
+                            <span className="font-medium text-gray-800 dark:text-gray-200">
+                              {job.salaryRange}
+                            </span>
                           </div>
                         )}
                         <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                           <Clock className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                          <span>{job.jobType || 'Type not specified'}</span>
+                          <span>{job.jobType || "Type not specified"}</span>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 mb-4">
-                        <Badge variant="default" className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700">
-                          {job.experienceLevel || 'Experience level not specified'}
+                        <Badge
+                          variant="default"
+                          className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700"
+                        >
+                          {job.experienceLevel ||
+                            "Experience level not specified"}
                         </Badge>
-                        <Badge variant="outline" className="border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700">
-                          {job.industry || 'Industry not specified'}
+                        <Badge
+                          variant="outline"
+                          className="border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700"
+                        >
+                          {job.industry || "Industry not specified"}
                         </Badge>
-                        <Badge variant="outline" className="border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700">
-                          {job.jobType || 'Job type not specified'}
+                        <Badge
+                          variant="outline"
+                          className="border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700"
+                        >
+                          {job.jobType || "Job type not specified"}
                         </Badge>
                       </div>
                     </div>
@@ -549,7 +625,9 @@ export default function Careers() {
                       Job Description
                     </h4>
                     <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                      <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{job.description}</p>
+                      <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                        {job.description}
+                      </p>
                     </div>
                   </div>
 
@@ -561,7 +639,9 @@ export default function Careers() {
                         Requirements
                       </h4>
                       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{job.requirements}</p>
+                        <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                          {job.requirements}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -574,51 +654,83 @@ export default function Careers() {
                         Required Skills
                       </h4>
                       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <p className="text-gray-800 dark:text-gray-200 leading-relaxed">{job.skills}</p>
+                        <p className="text-gray-800 dark:text-gray-200 leading-relaxed">
+                          {job.skills}
+                        </p>
                       </div>
                     </div>
                   )}
 
                   {/* Job Details Summary */}
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Job Summary</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                      Job Summary
+                    </h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300">Position:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">{job.title}</span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Position:
+                        </span>
+                        <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                          {job.title}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300">Company:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">{job.company}</span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Company:
+                        </span>
+                        <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                          {job.company}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300">Experience:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">{job.experienceLevel || 'Not specified'}</span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Experience:
+                        </span>
+                        <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                          {job.experienceLevel || "Not specified"}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300">Industry:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">{job.industry || 'Not specified'}</span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Industry:
+                        </span>
+                        <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                          {job.industry || "Not specified"}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300">Posted by:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">{job.posterRole || 'Not specified'}</span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Posted by:
+                        </span>
+                        <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                          {job.posterRole || "Not specified"}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-gray-700 dark:text-gray-300">Contact:</span>
-                        <span className="ml-2 font-medium text-gray-900 dark:text-white">{job.posterEmail || job.contactEmail}</span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Contact:
+                        </span>
+                        <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                          {job.posterEmail || job.contactEmail}
+                        </span>
                       </div>
                       {job.salaryRange && (
                         <div className="col-span-2">
-                          <span className="text-gray-700 dark:text-gray-300">Salary Range:</span>
-                          <span className="ml-2 font-medium text-gray-900 dark:text-white">{job.salaryRange}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Salary Range:
+                          </span>
+                          <span className="ml-2 font-medium text-gray-900 dark:text-white">
+                            {job.salaryRange}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Apply Button */}
                   <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <Button 
+                    <Button
                       size="lg"
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
                       onClick={() => {
@@ -638,11 +750,14 @@ export default function Careers() {
           <Card className="bg-card border-border">
             <CardContent className="p-8 text-center">
               <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Jobs Available Yet</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                No Jobs Available Yet
+              </h3>
               <p className="text-muted-foreground mb-4">
-                Be the first to post a job opportunity for the NewGiza community!
+                Be the first to post a job opportunity for the NewGiza
+                community!
               </p>
-              <Button 
+              <Button
                 onClick={() => setIsPostJobOpen(true)}
                 className="bg-blue-600 hover:bg-blue-700"
               >
