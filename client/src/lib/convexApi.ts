@@ -23,7 +23,6 @@ import {
   adaptUser,
   adaptEmailWhitelist,
   adaptAccessRequest,
-  numberToConvexId,
 } from "./typeAdapter";
 
 // Hook to get jobs
@@ -70,15 +69,15 @@ export const useUpdateJob = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
+    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
       convex.mutation(api.jobs.updateJob, {
-        id: numberToConvexId(id),
+        id: id as any,
         ...data,
       }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       queryClient.invalidateQueries({
-        queryKey: ["job", numberToConvexId(id)],
+        queryKey: ["job", id],
       });
     },
   });
@@ -90,8 +89,8 @@ export const useDeleteJob = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) =>
-      convex.mutation(api.jobs.deleteJob, { id: numberToConvexId(id) }),
+    mutationFn: (id: string) =>
+      convex.mutation(api.jobs.deleteJob, { id: id as any }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
@@ -149,15 +148,15 @@ export const useUpdateInternship = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
+    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
       convex.mutation(api.internships.updateInternship, {
-        id: numberToConvexId(id),
+        id: id as any,
         ...data,
       }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["internships"] });
       queryClient.invalidateQueries({
-        queryKey: ["internship", numberToConvexId(id)],
+        queryKey: ["internship", id],
       });
     },
   });
@@ -169,10 +168,8 @@ export const useDeleteInternship = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) =>
-      convex.mutation(api.internships.deleteInternship, {
-        id: numberToConvexId(id),
-      }),
+    mutationFn: (id: string) =>
+      convex.mutation(api.internships.deleteInternship, { id: id as any }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["internships"] });
     },
@@ -225,15 +222,15 @@ export const useUpdateCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
+    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
       convex.mutation(api.courses.updateCourse, {
-        id: numberToConvexId(id),
+        id: id as any,
         ...data,
       }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["courses"] });
       queryClient.invalidateQueries({
-        queryKey: ["course", numberToConvexId(id)],
+        queryKey: ["course", id],
       });
     },
   });
@@ -245,8 +242,8 @@ export const useDeleteCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) =>
-      convex.mutation(api.courses.deleteCourse, { id: numberToConvexId(id) }),
+    mutationFn: (id: string) =>
+      convex.mutation(api.courses.deleteCourse, { id: id as any }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courses"] });
     },
@@ -300,15 +297,15 @@ export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
+    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
       convex.mutation(api.profiles.updateProfile, {
-        id: numberToConvexId(id),
+        id: id as any,
         ...data,
       }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
       queryClient.invalidateQueries({
-        queryKey: ["profile", numberToConvexId(id)],
+        queryKey: ["profile", id],
       });
     },
   });
@@ -320,8 +317,8 @@ export const useDeleteProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) =>
-      convex.mutation(api.profiles.deleteProfile, { id: numberToConvexId(id) }),
+    mutationFn: (id: string) =>
+      convex.mutation(api.profiles.deleteProfile, { id: id as any }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
     },
@@ -375,14 +372,14 @@ export const useUpdateCvShowcase = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
+    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
       convex.mutation(api.cvShowcase.updateCvShowcase, {
-        id: numberToConvexId(id),
+        id: id as any,
         ...data,
       }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["cvShowcase"] });
-      queryClient.invalidateQueries({ queryKey: ["cv", numberToConvexId(id)] });
+      queryClient.invalidateQueries({ queryKey: ["cv", id] });
     },
   });
 };
@@ -393,9 +390,9 @@ export const useDeleteCvShowcase = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       convex.mutation(api.cvShowcase.deleteCvShowcase, {
-        id: numberToConvexId(id),
+        id: id as any,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cvShowcase"] });
@@ -451,15 +448,15 @@ export const useUpdateApplicationStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: string }) =>
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
       convex.mutation(api.applications.updateApplicationStatus, {
-        id: numberToConvexId(id),
+        id: id as any,
         status,
       }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["applications"] });
       queryClient.invalidateQueries({
-        queryKey: ["application", numberToConvexId(id)],
+        queryKey: ["application", id],
       });
     },
   });
@@ -515,9 +512,9 @@ export const useUpdateCommunityBenefit = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: number; [key: string]: any }) =>
+    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
       convex.mutation(api.communityBenefits.updateCommunityBenefit, {
-        id: numberToConvexId(id),
+        id: id as any,
         ...data,
       }),
     onSuccess: () => {
@@ -533,9 +530,9 @@ export const useDeleteCommunityBenefit = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) =>
+    mutationFn: (id: string) =>
       convex.mutation(api.communityBenefits.deleteCommunityBenefit, {
-        id: numberToConvexId(id),
+        id: id as any,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["communityBenefits"] });
@@ -616,18 +613,21 @@ export const useUpdateAccessRequestStatus = () => {
     mutationFn: ({
       id,
       status,
+      adminEmail,
     }: {
-      id: number;
+      id: string;
       status: "pending" | "approved" | "rejected";
+      adminEmail?: string;
     }) =>
       convex.mutation(api.accessRequests.updateStatus, {
-        id: numberToConvexId(id),
+        id: id as any,
         status,
+        adminEmail,
       }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["accessRequests"] });
       queryClient.invalidateQueries({
-        queryKey: ["accessRequest", numberToConvexId(id)],
+        queryKey: ["accessRequest", id],
       });
     },
   });

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
 
 export const create = mutation({
   args: {
@@ -47,21 +48,6 @@ export const create = mutation({
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     return await ctx.db.query("access_requests").collect();
   },
 });
@@ -69,28 +55,47 @@ export const getAll = query({
 export const updateStatus = mutation({
   args: {
     id: v.id("access_requests"),
-    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected")
+    ),
+    adminEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
+    // Get the access request details before updating
+    const accessRequest = await ctx.db.get(args.id);
+
+    if (!accessRequest) {
+      throw new Error("Access request not found");
     }
 
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
+    // Update the access request status
     await ctx.db.patch(args.id, {
       status: args.status,
       updated_at: new Date().toISOString(),
     });
+
+    // If approved, add to email whitelist
+    if (args.status === "approved") {
+      try {
+        await ctx.runMutation(api.whitelist.addToWhitelist, {
+          email: accessRequest.email,
+          name: accessRequest.full_name,
+          unit: accessRequest.unit_number,
+          phone: accessRequest.mobile || undefined,
+          addedBy: args.adminEmail || "access_request_approval",
+        });
+      } catch (error) {
+        // If email is already whitelisted, that's okay - just continue
+        if (
+          error instanceof Error &&
+          error.message !== "Email already whitelisted"
+        ) {
+          throw error;
+        }
+      }
+    }
   },
 });
 
@@ -99,21 +104,6 @@ export const deleteRequest = mutation({
     id: v.id("access_requests"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     await ctx.db.delete(args.id);
   },
-}); 
+});

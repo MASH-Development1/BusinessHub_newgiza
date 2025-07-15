@@ -2,7 +2,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 
 // Type definitions for the frontend (matching the old REST API types)
 export interface Job {
-  id: number;
+  id: string;
   title: string;
   company: string;
   posterEmail: string;
@@ -26,7 +26,7 @@ export interface Job {
 }
 
 export interface Internship {
-  id: number;
+  id: string;
   title: string;
   company: string;
   posterEmail: string;
@@ -53,7 +53,7 @@ export interface Internship {
 }
 
 export interface Course {
-  id: number;
+  id: string;
   title: string;
   description: string;
   type: string;
@@ -77,7 +77,7 @@ export interface Course {
 }
 
 export interface Profile {
-  id: number;
+  id: string;
   userId: number | null;
   name: string;
   title: string;
@@ -99,7 +99,7 @@ export interface Profile {
 }
 
 export interface CvShowcase {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string | null;
@@ -118,7 +118,7 @@ export interface CvShowcase {
 }
 
 export interface CommunityBenefit {
-  id: number;
+  id: string;
   title: string;
   description: string;
   discountPercentage: string | null;
@@ -135,7 +135,7 @@ export interface CommunityBenefit {
 }
 
 export interface Application {
-  id: number;
+  id: string;
   applicantName: string;
   applicantEmail: string;
   applicantPhone: string;
@@ -151,7 +151,7 @@ export interface Application {
 }
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
   role: string;
@@ -161,7 +161,7 @@ export interface User {
 }
 
 export interface EmailWhitelist {
-  id: string; // Changed from number to string
+  id: string;
   email: string;
   name: string | null;
   unit: string | null;
@@ -173,7 +173,7 @@ export interface EmailWhitelist {
 }
 
 export interface AccessRequest {
-  id: number;
+  id: string;
   fullName: string;
   email: string;
   unitNumber: string;
@@ -186,7 +186,7 @@ export interface AccessRequest {
 // Type adapter functions to convert Convex types to frontend types
 export function adaptJob(convexJob: any): Job {
   return {
-    id: parseInt(convexJob._id),
+    id: convexJob._id,
     title: convexJob.title,
     company: convexJob.company,
     posterEmail: convexJob.poster_email,
@@ -212,7 +212,7 @@ export function adaptJob(convexJob: any): Job {
 
 export function adaptInternship(convexInternship: any): Internship {
   return {
-    id: parseInt(convexInternship._id),
+    id: convexInternship._id,
     title: convexInternship.title,
     company: convexInternship.company,
     posterEmail: convexInternship.poster_email,
@@ -241,7 +241,7 @@ export function adaptInternship(convexInternship: any): Internship {
 
 export function adaptCourse(convexCourse: any): Course {
   return {
-    id: parseInt(convexCourse._id),
+    id: convexCourse._id,
     title: convexCourse.title,
     description: convexCourse.description,
     type: convexCourse.type,
@@ -267,8 +267,8 @@ export function adaptCourse(convexCourse: any): Course {
 
 export function adaptProfile(convexProfile: any): Profile {
   return {
-    id: parseInt(convexProfile._id),
-    userId: convexProfile.user_id ? parseInt(convexProfile.user_id) : null,
+    id: convexProfile._id,
+    userId: convexProfile.user_id,
     name: convexProfile.name,
     title: convexProfile.title,
     company: convexProfile.company,
@@ -291,7 +291,7 @@ export function adaptProfile(convexProfile: any): Profile {
 
 export function adaptCvShowcase(convexCv: any): CvShowcase {
   return {
-    id: parseInt(convexCv._id),
+    id: convexCv._id,
     name: convexCv.name,
     email: convexCv.email,
     phone: convexCv.phone,
@@ -312,7 +312,7 @@ export function adaptCvShowcase(convexCv: any): CvShowcase {
 
 export function adaptCommunityBenefit(convexBenefit: any): CommunityBenefit {
   return {
-    id: parseInt(convexBenefit._id),
+    id: convexBenefit._id,
     title: convexBenefit.title,
     description: convexBenefit.description,
     discountPercentage: convexBenefit.discount_percentage,
@@ -331,17 +331,15 @@ export function adaptCommunityBenefit(convexBenefit: any): CommunityBenefit {
 
 export function adaptApplication(convexApplication: any): Application {
   return {
-    id: parseInt(convexApplication._id),
+    id: convexApplication._id,
     applicantName: convexApplication.applicant_name,
     applicantEmail: convexApplication.applicant_email,
     applicantPhone: convexApplication.applicant_phone,
     coverLetter: convexApplication.cover_letter,
     cvFileName: convexApplication.cv_file_name,
     cvFilePath: convexApplication.cv_file_path,
-    jobId: convexApplication.job_id ? parseInt(convexApplication.job_id) : null,
-    internshipId: convexApplication.internship_id
-      ? parseInt(convexApplication.internship_id)
-      : null,
+    jobId: convexApplication.job_id,
+    internshipId: convexApplication.internship_id,
     status: convexApplication.status,
     notes: convexApplication.notes,
     createdAt: convexApplication.created_at,
@@ -351,7 +349,7 @@ export function adaptApplication(convexApplication: any): Application {
 
 export function adaptUser(convexUser: any): User {
   return {
-    id: parseInt(convexUser._id),
+    id: convexUser._id,
     email: convexUser.email,
     name: convexUser.name,
     role: convexUser.role,
@@ -363,7 +361,7 @@ export function adaptUser(convexUser: any): User {
 
 export function adaptEmailWhitelist(convexWhitelist: any): EmailWhitelist {
   return {
-    id: convexWhitelist._id, // Keep as string (Convex ID)
+    id: convexWhitelist._id,
     email: convexWhitelist.email,
     name: convexWhitelist.name,
     unit: convexWhitelist.unit,
@@ -377,7 +375,7 @@ export function adaptEmailWhitelist(convexWhitelist: any): EmailWhitelist {
 
 export function adaptAccessRequest(convexRequest: any): AccessRequest {
   return {
-    id: parseInt(convexRequest._id),
+    id: convexRequest._id,
     fullName: convexRequest.full_name,
     email: convexRequest.email,
     unitNumber: convexRequest.unit_number,

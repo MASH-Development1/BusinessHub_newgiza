@@ -381,7 +381,11 @@ export default function AdminComplete() {
     status: "pending" | "approved" | "rejected"
   ) => {
     updateAccessRequestStatusMutation.mutate(
-      { id: id as any, status },
+      {
+        id: id as any,
+        status,
+        adminEmail: user?.email || "admin", // Pass current user's email
+      },
       {
         onSuccess: () => {
           toast({
@@ -1370,7 +1374,9 @@ export default function AdminComplete() {
                             {item.unit && (
                               <p className="text-sm">{item.unit}</p>
                             )}
-                            <Badge variant={item.isActive ? "active" : "draft"}>
+                            <Badge
+                              variant={item.isActive ? "default" : "secondary"}
+                            >
                               {item.isActive ? "Active" : "Inactive"}
                             </Badge>
                           </div>
