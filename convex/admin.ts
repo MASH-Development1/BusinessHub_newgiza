@@ -5,48 +5,16 @@ import { Id } from "./_generated/dataModel";
 // Query to get all removed jobs
 export const getRemovedJobs = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     // Get all removed jobs
-    const removedJobs = await ctx.db.query("removed_jobs").collect();
-    return removedJobs;
+    return await ctx.db.query("removed_jobs").collect();
   },
 });
 
 // Query to get all removed internships
 export const getRemovedInternships = query({
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     // Get all removed internships
-    const removedInternships = await ctx.db.query("removed_internships").collect();
-    return removedInternships;
+    return await ctx.db.query("removed_internships").collect();
   },
 });
 
@@ -54,21 +22,6 @@ export const getRemovedInternships = query({
 export const restoreRemovedJob = mutation({
   args: { id: v.id("removed_jobs") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     // Get the removed job
     const removedJob = await ctx.db.get(args.id);
     if (!removedJob) {
@@ -111,21 +64,6 @@ export const restoreRemovedJob = mutation({
 export const restoreRemovedInternship = mutation({
   args: { id: v.id("removed_internships") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     // Get the removed internship
     const removedInternship = await ctx.db.get(args.id);
     if (!removedInternship) {
@@ -171,21 +109,6 @@ export const restoreRemovedInternship = mutation({
 export const permanentlyDeleteRemovedJob = mutation({
   args: { id: v.id("removed_jobs") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     // Delete the removed job record
     await ctx.db.delete(args.id);
 
@@ -197,192 +120,9 @@ export const permanentlyDeleteRemovedJob = mutation({
 export const permanentlyDeleteRemovedInternship = mutation({
   args: { id: v.id("removed_internships") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
     // Delete the removed internship record
     await ctx.db.delete(args.id);
 
     return { success: true };
   },
 });
-
-// Mutation to approve a job
-export const approveJob = mutation({
-  args: {
-    id: v.id("jobs"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
-    await ctx.db.patch(args.id, {
-      is_approved: true,
-      status: "approved",
-      updated_at: new Date().toISOString(),
-    });
-  },
-});
-
-// Mutation to approve an internship
-export const approveInternship = mutation({
-  args: {
-    id: v.id("internships"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
-    await ctx.db.patch(args.id, {
-      is_approved: true,
-      status: "approved",
-      updated_at: new Date().toISOString(),
-    });
-  },
-});
-
-// Mutation to reject an internship
-export const rejectInternship = mutation({
-  args: {
-    id: v.id("internships"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
-    await ctx.db.patch(args.id, {
-      status: "rejected",
-      updated_at: new Date().toISOString(),
-    });
-  },
-});
-
-// Mutation to approve access request and add to whitelist
-export const approveAccessRequest = mutation({
-  args: {
-    id: v.id("access_requests"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
-    // Get the access request
-    const request = await ctx.db.get(args.id);
-    if (!request) {
-      throw new Error("Access request not found");
-    }
-
-    // Update request status
-    await ctx.db.patch(args.id, {
-      status: "approved",
-      updated_at: new Date().toISOString(),
-    });
-
-    // Add email to whitelist
-    const existingEmail = await ctx.db
-      .query("email_whitelist")
-      .withIndex("email", (q) => q.eq("email", request.email))
-      .first();
-
-    if (!existingEmail) {
-      await ctx.db.insert("email_whitelist", {
-        email: request.email,
-        name: request.full_name,
-        unit: request.unit_number,
-        phone: request.mobile,
-        is_active: true,
-        added_by: identity.email!,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    }
-  },
-});
-
-// Mutation to reject access request
-export const rejectAccessRequest = mutation({
-  args: {
-    id: v.id("access_requests"),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    // Check if user is admin
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (user?.role !== "admin") {
-      throw new Error("Admin access required");
-    }
-
-    await ctx.db.patch(args.id, {
-      status: "rejected",
-      updated_at: new Date().toISOString(),
-    });
-  },
-}); 
