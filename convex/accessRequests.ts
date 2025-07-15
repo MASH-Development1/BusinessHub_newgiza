@@ -48,7 +48,7 @@ export const create = mutation({
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("access_requests").collect();
+    return (await ctx.db.query("access_requests").collect()).reverse();
   },
 });
 

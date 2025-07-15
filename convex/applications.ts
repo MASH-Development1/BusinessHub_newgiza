@@ -4,7 +4,7 @@ import { mutation, query } from "./_generated/server";
 // Query to get all applications
 export const getApplications = query({
   handler: async (ctx) => {
-    return await ctx.db.query("applications").collect();
+    return (await ctx.db.query("applications").collect()).reverse();
   },
 });
 
@@ -32,7 +32,7 @@ export const createJobApplication = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     const applicationId = await ctx.db.insert("applications", {
       ...args,
       internship_id: null,
@@ -59,7 +59,7 @@ export const createInternshipApplication = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     const applicationId = await ctx.db.insert("applications", {
       ...args,
       job_id: null,
@@ -82,7 +82,7 @@ export const updateApplicationStatus = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     await ctx.db.patch(args.id, {
       status: args.status,
       notes: args.notes,
@@ -105,4 +105,4 @@ export const deleteApplication = mutation({
     await ctx.db.delete(args.id);
     return { success: true };
   },
-}); 
+});

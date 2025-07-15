@@ -6,7 +6,7 @@ import { Id } from "./_generated/dataModel";
 export const getRemovedJobs = query({
   handler: async (ctx) => {
     // Get all removed jobs
-    return await ctx.db.query("removed_jobs").collect();
+    return (await ctx.db.query("removed_jobs").collect()).reverse();
   },
 });
 
@@ -14,7 +14,7 @@ export const getRemovedJobs = query({
 export const getRemovedInternships = query({
   handler: async (ctx) => {
     // Get all removed internships
-    return await ctx.db.query("removed_internships").collect();
+    return (await ctx.db.query("removed_internships").collect()).reverse();
   },
 });
 

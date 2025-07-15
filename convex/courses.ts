@@ -21,7 +21,7 @@ export const getCourses = query({
       });
     }
 
-    return courses;
+    return courses.reverse();
   },
 });
 
@@ -56,7 +56,7 @@ export const createCourse = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     const courseId = await ctx.db.insert("courses", {
       ...args,
       current_attendees: 0,
@@ -97,7 +97,7 @@ export const updateCourse = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const now = new Date().toISOString();
-    
+
     await ctx.db.patch(id, {
       ...updates,
       updated_at: now,
@@ -119,4 +119,4 @@ export const deleteCourse = mutation({
     await ctx.db.delete(args.id);
     return { success: true };
   },
-}); 
+});

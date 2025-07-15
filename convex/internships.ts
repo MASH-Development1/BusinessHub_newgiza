@@ -21,7 +21,7 @@ export const getInternships = query({
       });
     }
 
-    return internships;
+    return internships.reverse();
   },
 });
 
@@ -60,7 +60,7 @@ export const createInternship = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     const internshipId = await ctx.db.insert("internships", {
       ...args,
       is_active: true,
@@ -103,7 +103,7 @@ export const updateInternship = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const now = new Date().toISOString();
-    
+
     await ctx.db.patch(id, {
       ...updates,
       updated_at: now,
@@ -156,4 +156,4 @@ export const deleteInternship = mutation({
     await ctx.db.delete(args.id);
     return { success: true };
   },
-}); 
+});

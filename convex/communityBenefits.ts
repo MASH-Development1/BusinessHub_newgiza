@@ -21,7 +21,7 @@ export const getCommunityBenefits = query({
       });
     }
 
-    return benefits;
+    return benefits.reverse();
   },
 });
 
@@ -63,7 +63,7 @@ export const createCommunityBenefit = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     const benefitId = await ctx.db.insert("community_benefits", {
       ...args,
       is_active: true,
@@ -95,7 +95,7 @@ export const updateCommunityBenefit = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const now = new Date().toISOString();
-    
+
     await ctx.db.patch(id, {
       ...updates,
       updated_at: now,
@@ -117,4 +117,4 @@ export const deleteCommunityBenefit = mutation({
     await ctx.db.delete(args.id);
     return { success: true };
   },
-}); 
+});

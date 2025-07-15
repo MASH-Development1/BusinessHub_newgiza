@@ -22,7 +22,7 @@ export const getJobs = query({
       });
     }
 
-    return jobs;
+    return jobs.reverse();
   },
 });
 
@@ -58,7 +58,7 @@ export const createJob = mutation({
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     const jobId = await ctx.db.insert("jobs", {
       ...args,
       is_active: true,
@@ -98,7 +98,7 @@ export const updateJob = mutation({
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const now = new Date().toISOString();
-    
+
     await ctx.db.patch(id, {
       ...updates,
       updated_at: now,
@@ -148,4 +148,4 @@ export const deleteJob = mutation({
     await ctx.db.delete(args.id);
     return { success: true };
   },
-}); 
+});
