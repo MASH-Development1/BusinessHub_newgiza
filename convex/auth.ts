@@ -1,39 +1,27 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 // Generate a random session ID
 function generateSessionId(): string {
   return Math.random().toString(36).substring(7);
 }
 
-// Check if email is whitelisted
-export const isEmailWhitelisted = query({
-  args: { email: v.string() },
-  handler: async (ctx, args) => {
-    const whitelisted = await ctx.db
-      .query("email_whitelist")
-      .withIndex("email", (q) => q.eq("email", args.email.toLowerCase()))
-      .first();
-    
-    return !!whitelisted;
-  },
-});
-
 // Login with email (check whitelist) - same logic as Express.js
 export const loginWithEmail = mutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
     const email = args.email.toLowerCase();
-    
+
     // Check if email is whitelisted
     const whitelisted = await ctx.db
       .query("email_whitelist")
       .withIndex("email", (q) => q.eq("email", email))
       .first();
-    
+
     if (!whitelisted) {
-      throw new Error("Access denied. Your email is not registered as a NewGiza resident. Please contact the community administrator.");
+      throw new Error(
+        "Access denied. Your email is not registered as a NewGiza resident. Please contact the community administrator."
+      );
     }
 
     // Check if user exists
@@ -57,7 +45,7 @@ export const loginWithEmail = mutation({
     // Create session
     const sessionId = generateSessionId();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
-    
+
     await ctx.db.insert("sessions", {
       session_id: sessionId,
       email: email,
@@ -69,22 +57,22 @@ export const loginWithEmail = mutation({
     return {
       sessionId,
       user: user!,
-      message: "Login successful"
+      message: "Login successful",
     };
   },
 });
 
 // Admin login with hardcoded credentials - same logic as Express.js
 export const adminLogin = mutation({
-  args: { 
+  args: {
     username: v.string(),
-    password: v.string()
+    password: v.string(),
   },
   handler: async (ctx, args) => {
     // Hardcoded admin credentials
     const ADMIN_EMAIL = "admin@newgiza.com";
     const ADMIN_PASSWORD = "NewGiza@2025!";
-    
+
     if (args.username !== ADMIN_EMAIL || args.password !== ADMIN_PASSWORD) {
       throw new Error("Invalid admin credentials");
     }
@@ -110,7 +98,7 @@ export const adminLogin = mutation({
     // Create admin session
     const sessionId = generateSessionId();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
-    
+
     await ctx.db.insert("sessions", {
       session_id: sessionId,
       email: ADMIN_EMAIL,
@@ -122,7 +110,7 @@ export const adminLogin = mutation({
     return {
       sessionId,
       user: adminUser!,
-      message: "Admin login successful"
+      message: "Admin login successful",
     };
   },
 });
@@ -131,7 +119,10 @@ export const adminLogin = mutation({
 export const getCurrentUser = query({
   args: { sessionId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    console.log("[Convex] getCurrentUser called with sessionId:", args.sessionId);
+    console.log(
+      "[Convex] getCurrentUser called with sessionId:",
+      args.sessionId
+    );
     if (!args.sessionId) {
       console.log("[Convex] No sessionId provided");
       return null;
@@ -163,7 +154,7 @@ export const getCurrentUser = query({
       email: session.email,
       isAdmin: session.is_admin,
       isAuthenticated: true,
-      user: user
+      user: user,
     };
   },
 });
@@ -218,42 +209,13 @@ export const createAdminUser = mutation({
   },
 });
 
-// Add test email to whitelist (for testing)
-export const addTestEmailToWhitelist = mutation({
-  args: {
-    email: v.string(),
-    name: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const existingEmail = await ctx.db
-      .query("email_whitelist")
-      .withIndex("email", (q) => q.eq("email", args.email.toLowerCase()))
-      .first();
-
-    if (existingEmail) {
-      return existingEmail._id;
-    }
-
-    const emailId = await ctx.db.insert("email_whitelist", {
-      email: args.email.toLowerCase(),
-      name: args.name || "Test User",
-      unit: null,
-      phone: null,
-      is_active: true,
-      added_by: "system",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-
-    return emailId;
-  },
-});
-
 export const createUser = mutation({
   args: {
     email: v.string(),
     name: v.string(),
-    role: v.optional(v.union(v.literal("user"), v.literal("admin"), v.literal("recruiter"))),
+    role: v.optional(
+      v.union(v.literal("user"), v.literal("admin"), v.literal("recruiter"))
+    ),
   },
   handler: async (ctx, args) => {
     const existingUser = await ctx.db
@@ -282,15 +244,12 @@ export const updateUser = mutation({
     id: v.id("users"),
     updates: v.object({
       name: v.optional(v.string()),
-      role: v.optional(v.union(v.literal("user"), v.literal("admin"), v.literal("recruiter"))),
+      role: v.optional(
+        v.union(v.literal("user"), v.literal("admin"), v.literal("recruiter"))
+      ),
     }),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     const updates = {
       ...args.updates,
       updated_at: new Date().toISOString(),
@@ -305,26 +264,10 @@ export const deleteUser = mutation({
     id: v.id("users"),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     const user = await ctx.db.get(args.id);
     if (!user) {
       throw new Error("User not found");
     }
-
-    // Only allow admins to delete users
-    const currentUser = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .first();
-
-    if (currentUser?.role !== "admin") {
-      throw new Error("Not authorized");
-    }
-
     await ctx.db.delete(args.id);
   },
-}); 
+});
