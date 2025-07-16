@@ -78,7 +78,7 @@ export default defineSchema({
     skills: v.optional(v.union(v.string(), v.null())),
     is_active: v.boolean(), // set default in mutation logic
     is_featured: v.boolean(), // set default in mutation logic
-    posted_by: v.optional(v.union(v.number(), v.null())),
+    posted_by: v.optional(v.union(v.string(), v.null())), // Convex auth user ID
     created_at: v.string(), // ISO8601 date string
     updated_at: v.string(), // ISO8601 date string
     is_approved: v.boolean(), // set default in mutation logic
@@ -164,7 +164,7 @@ export default defineSchema({
     is_active: v.optional(v.union(v.boolean(), v.null())),
     is_approved: v.optional(v.union(v.boolean(), v.null())),
     status: v.optional(v.union(v.string(), v.null())), // VARCHAR(20)
-    posted_by: v.optional(v.union(v.number(), v.null())), // INTEGER
+    posted_by: v.optional(v.union(v.string(), v.null())), // Convex auth user ID
     created_at: v.string(), // ISO8601 date string
     updated_at: v.string(), // ISO8601 date string
   }),
@@ -187,7 +187,7 @@ export default defineSchema({
     is_active: v.optional(v.union(v.boolean(), v.null())),
     is_approved: v.optional(v.union(v.boolean(), v.null())),
     status: v.optional(v.union(v.string(), v.null())), // VARCHAR(20)
-    posted_by: v.optional(v.union(v.number(), v.null())), // INTEGER
+    posted_by: v.optional(v.union(v.string(), v.null())), // Convex auth user ID
     created_at: v.string(), // ISO8601 date string
     updated_at: v.string(), // ISO8601 date string
   }),
@@ -234,7 +234,7 @@ export default defineSchema({
     is_active: v.optional(v.union(v.boolean(), v.null())),
     is_approved: v.optional(v.union(v.boolean(), v.null())),
     status: v.optional(v.union(v.string(), v.null())),
-    posted_by: v.optional(v.union(v.number(), v.null())),
+    posted_by: v.optional(v.union(v.string(), v.null())), // Convex auth user ID
     original_created_at: v.optional(v.union(v.string(), v.null())), // ISO8601 date string
     original_updated_at: v.optional(v.union(v.string(), v.null())), // ISO8601 date string
     removed_at: v.optional(v.union(v.string(), v.null())), // ISO8601 date string
@@ -262,7 +262,7 @@ export default defineSchema({
     is_active: v.optional(v.union(v.boolean(), v.null())),
     is_approved: v.optional(v.union(v.boolean(), v.null())),
     status: v.optional(v.union(v.string(), v.null())), // VARCHAR(20)
-    posted_by: v.optional(v.union(v.number(), v.null())), // INTEGER
+    posted_by: v.optional(v.union(v.string(), v.null())), // Convex auth user ID
     original_created_at: v.optional(v.union(v.string(), v.null())), // ISO8601 date string
     original_updated_at: v.optional(v.union(v.string(), v.null())), // ISO8601 date string
     removed_at: v.optional(v.union(v.string(), v.null())), // ISO8601 date string

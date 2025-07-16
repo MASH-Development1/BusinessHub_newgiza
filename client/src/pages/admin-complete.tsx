@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -20,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -90,28 +92,98 @@ import {
   UserCheck,
 } from "lucide-react";
 
+const industries = [
+  "Technology/IT",
+  "Marketing",
+  "Finance",
+  "Human Resources",
+  "Sales",
+  "Procurement",
+  "Operations",
+  "Legal",
+  "Healthcare",
+  "Education",
+  "Engineering",
+  "Design",
+  "Consulting",
+  "Real Estate",
+  "Other",
+];
+
+const roles = [
+  "CEO",
+  "CTO",
+  "CFO",
+  "COO",
+  "Vice President",
+  "Director",
+  "Department Head",
+  "Hiring Manager",
+  "HR Manager",
+  "HR Business Partner",
+  "Talent Acquisition",
+  "Team Lead",
+  "Project Manager",
+  "Senior Manager",
+  "Manager",
+  "Supervisor",
+  "Staff Member",
+  "Other",
+];
+
+const experienceLevels = [
+  { value: "Entry Level", label: "Entry Level" },
+  { value: "Mid Level", label: "Mid Level" },
+  { value: "Senior Level", label: "Senior Level" },
+  { value: "Executive", label: "Executive" },
+];
+
+const jobTypes = [
+  { value: "Full-time", label: "Full-time" },
+  { value: "Part-time", label: "Part-time" },
+  { value: "Contract", label: "Contract" },
+  { value: "Remote", label: "Remote" },
+  { value: "Hybrid", label: "Hybrid" },
+];
+
 export default function AdminComplete() {
   const { toast } = useToast();
-  const { user } = useAuth(); // Add this line to get current user
+  const { user, sessionId } = useAuth(); // Add sessionId to get current user session
 
   // Form states
   const [jobForm, setJobForm] = useState({
     title: "",
     company: "",
+    posterRole: "",
     description: "",
+    requirements: "",
     location: "",
     industry: "",
     experienceLevel: "",
+    jobType: "",
     skills: "",
     salaryRange: "",
+    contactEmail: "",
+    contactPhone: "",
   });
 
   const [internshipForm, setInternshipForm] = useState({
     title: "",
     company: "",
+    posterRole: "",
     description: "",
+    requirements: "",
+    skills: "",
     department: "",
     duration: "",
+    isPaid: false,
+    stipend: "",
+    location: "",
+    positions: "",
+    contactEmail: "",
+    contactPhone: "",
+    startDate: "",
+    applicationDeadline: "",
   });
 
   const [courseForm, setCourseForm] = useState({
@@ -211,21 +283,41 @@ export default function AdminComplete() {
     e.preventDefault();
     createJobMutation.mutate(
       {
-        ...jobForm,
+        title: jobForm.title,
+        company: jobForm.company,
+        poster_email: user?.email || "admin@businesshub.com",
+        poster_role: jobForm.posterRole,
+        description: jobForm.description,
+        requirements: jobForm.requirements || undefined,
+        skills: jobForm.skills || undefined,
+        industry: jobForm.industry || undefined,
+        experience_level: jobForm.experienceLevel || undefined,
+        job_type: jobForm.jobType || undefined,
+        location: jobForm.location || undefined,
+        salary_range: jobForm.salaryRange || undefined,
+        contact_email: jobForm.contactEmail,
+        contact_phone: jobForm.contactPhone,
+        is_active: true,
+        is_approved: true,
         status: "active",
-        isActive: true,
+        sessionId: sessionId || undefined,
       },
       {
         onSuccess: () => {
           setJobForm({
             title: "",
             company: "",
+            posterRole: "",
             description: "",
+            requirements: "",
             location: "",
             industry: "",
             experienceLevel: "",
+            jobType: "",
             skills: "",
             salaryRange: "",
+            contactEmail: "",
+            contactPhone: "",
           });
           toast({ title: "Success", description: "Job created successfully!" });
         },
@@ -244,18 +336,49 @@ export default function AdminComplete() {
     e.preventDefault();
     createInternshipMutation.mutate(
       {
-        ...internshipForm,
+        title: internshipForm.title,
+        company: internshipForm.company,
+        poster_email: user?.email || "admin@businesshub.com",
+        poster_role: internshipForm.posterRole,
+        description: internshipForm.description,
+        requirements: internshipForm.requirements || undefined,
+        skills: internshipForm.skills || undefined,
+        department: internshipForm.department || undefined,
+        duration: internshipForm.duration,
+        is_paid: internshipForm.isPaid,
+        stipend: internshipForm.stipend || undefined,
+        location: internshipForm.location || undefined,
+        positions: internshipForm.positions
+          ? parseInt(internshipForm.positions)
+          : undefined,
+        contact_email: internshipForm.contactEmail,
+        contact_phone: internshipForm.contactPhone || undefined,
+        start_date: internshipForm.startDate || undefined,
+        application_deadline: internshipForm.applicationDeadline || undefined,
+        is_active: true,
+        is_approved: true,
         status: "active",
-        isActive: true,
+        sessionId: sessionId || undefined,
       },
       {
         onSuccess: () => {
           setInternshipForm({
             title: "",
             company: "",
+            posterRole: "",
             description: "",
+            requirements: "",
+            skills: "",
             department: "",
             duration: "",
+            isPaid: false,
+            stipend: "",
+            location: "",
+            positions: "",
+            contactEmail: "",
+            contactPhone: "",
+            startDate: "",
+            applicationDeadline: "",
           });
           toast({
             title: "Success",
@@ -574,35 +697,60 @@ export default function AdminComplete() {
                       Add New Job
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Add New Job</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleJobSubmit} className="space-y-4">
                       <div>
-                        <Label htmlFor="job-title">Title</Label>
+                        <Label htmlFor="job-title" className="mb-3 block">
+                          Title *
+                        </Label>
                         <Input
                           id="job-title"
                           value={jobForm.title}
                           onChange={(e) =>
                             setJobForm({ ...jobForm, title: e.target.value })
                           }
+                          placeholder="e.g., Senior Software Engineer"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="job-company">Company</Label>
+                        <Label htmlFor="job-company" className="mb-3 block">
+                          Company *
+                        </Label>
                         <Input
                           id="job-company"
                           value={jobForm.company}
                           onChange={(e) =>
                             setJobForm({ ...jobForm, company: e.target.value })
                           }
+                          placeholder="Company name"
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="job-description">Description</Label>
+                        <Label htmlFor="job-poster-role" className="mb-3 block">
+                          Your Role in Company *
+                        </Label>
+                        <SearchableSelect
+                          value={jobForm.posterRole}
+                          onValueChange={(value) =>
+                            setJobForm({ ...jobForm, posterRole: value })
+                          }
+                          options={roles.map((role) => ({
+                            value: role,
+                            label: role,
+                          }))}
+                          placeholder="Select your role"
+                          searchPlaceholder="Search roles..."
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="job-description" className="mb-3 block">
+                          Job Description *
+                        </Label>
                         <Textarea
                           id="job-description"
                           value={jobForm.description}
@@ -612,12 +760,36 @@ export default function AdminComplete() {
                               description: e.target.value,
                             })
                           }
+                          placeholder="Describe the role, responsibilities, and what you're looking for..."
+                          rows={4}
                           required
+                        />
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="job-requirements"
+                          className="mb-3 block"
+                        >
+                          Requirements (Optional)
+                        </Label>
+                        <Textarea
+                          id="job-requirements"
+                          value={jobForm.requirements}
+                          onChange={(e) =>
+                            setJobForm({
+                              ...jobForm,
+                              requirements: e.target.value,
+                            })
+                          }
+                          placeholder="List the required skills, qualifications, and experience..."
+                          rows={3}
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="job-location">Location</Label>
+                          <Label htmlFor="job-location" className="mb-3 block">
+                            Location (Optional)
+                          </Label>
                           <Input
                             id="job-location"
                             value={jobForm.location}
@@ -627,43 +799,13 @@ export default function AdminComplete() {
                                 location: e.target.value,
                               })
                             }
-                            required
+                            placeholder="e.g., Cairo, Egypt"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="job-industry">Industry</Label>
-                          <Input
-                            id="job-industry"
-                            value={jobForm.industry}
-                            onChange={(e) =>
-                              setJobForm({
-                                ...jobForm,
-                                industry: e.target.value,
-                              })
-                            }
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="job-experience">
-                            Experience Level
+                          <Label htmlFor="job-salary" className="mb-3 block">
+                            Salary Range (Optional)
                           </Label>
-                          <Input
-                            id="job-experience"
-                            value={jobForm.experienceLevel}
-                            onChange={(e) =>
-                              setJobForm({
-                                ...jobForm,
-                                experienceLevel: e.target.value,
-                              })
-                            }
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="job-salary">Salary Range</Label>
                           <Input
                             id="job-salary"
                             value={jobForm.salaryRange}
@@ -673,20 +815,131 @@ export default function AdminComplete() {
                                 salaryRange: e.target.value,
                               })
                             }
-                            required
+                            placeholder="e.g., 15,000 - 25,000 EGP"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label
+                            htmlFor="job-experience"
+                            className="mb-3 block"
+                          >
+                            Experience Level (Optional)
+                          </Label>
+                          <SearchableSelect
+                            value={jobForm.experienceLevel}
+                            onValueChange={(value) =>
+                              setJobForm({
+                                ...jobForm,
+                                experienceLevel: value,
+                              })
+                            }
+                            options={experienceLevels}
+                            placeholder="Select level"
+                            searchPlaceholder="Search levels..."
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="job-industry" className="mb-3 block">
+                            Industry (Optional)
+                          </Label>
+                          <SearchableSelect
+                            value={jobForm.industry}
+                            onValueChange={(value) =>
+                              setJobForm({
+                                ...jobForm,
+                                industry: value,
+                              })
+                            }
+                            options={industries.map((industry) => ({
+                              value: industry,
+                              label: industry,
+                            }))}
+                            placeholder="Select industry"
+                            searchPlaceholder="Search industries..."
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="job-type" className="mb-3 block">
+                            Job Type (Optional)
+                          </Label>
+                          <SearchableSelect
+                            value={jobForm.jobType}
+                            onValueChange={(value) =>
+                              setJobForm({
+                                ...jobForm,
+                                jobType: value,
+                              })
+                            }
+                            options={jobTypes}
+                            placeholder="Select type"
+                            searchPlaceholder="Search types..."
                           />
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="job-skills">Skills</Label>
+                        <Label htmlFor="job-skills" className="mb-3 block">
+                          Required Skills (Optional)
+                        </Label>
                         <Input
                           id="job-skills"
                           value={jobForm.skills}
                           onChange={(e) =>
                             setJobForm({ ...jobForm, skills: e.target.value })
                           }
+                          placeholder="e.g., JavaScript, React, Node.js, SQL"
+                        />
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="job-contact-email"
+                          className="mb-3 block"
+                        >
+                          Contact Email *
+                        </Label>
+                        <Input
+                          id="job-contact-email"
+                          type="email"
+                          value={jobForm.contactEmail}
+                          onChange={(e) =>
+                            setJobForm({
+                              ...jobForm,
+                              contactEmail: e.target.value,
+                            })
+                          }
+                          placeholder="recruiter@company.com"
                           required
                         />
+                        <p className="text-sm text-muted-foreground mt-1">
+                          This email will only be visible to admins for
+                          applicant management
+                        </p>
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="job-contact-phone"
+                          className="mb-3 block"
+                        >
+                          Contact Phone *
+                        </Label>
+                        <Input
+                          id="job-contact-phone"
+                          type="tel"
+                          value={jobForm.contactPhone}
+                          onChange={(e) =>
+                            setJobForm({
+                              ...jobForm,
+                              contactPhone: e.target.value,
+                            })
+                          }
+                          placeholder="+20 10 1234 5678"
+                          required
+                        />
+                        <p className="text-sm text-muted-foreground mt-1">
+                          This phone number will only be visible to admins for
+                          applicant management
+                        </p>
                       </div>
                       <Button
                         type="submit"
@@ -765,62 +1018,88 @@ export default function AdminComplete() {
                       Add New Internship
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Add New Internship</DialogTitle>
                     </DialogHeader>
                     <form
                       onSubmit={handleInternshipSubmit}
-                      className="space-y-4"
+                      className="space-y-6"
                     >
-                      <div>
-                        <Label htmlFor="internship-title">Title</Label>
-                        <Input
-                          id="internship-title"
-                          value={internshipForm.title}
-                          onChange={(e) =>
-                            setInternshipForm({
-                              ...internshipForm,
-                              title: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="internship-company">Company</Label>
-                        <Input
-                          id="internship-company"
-                          value={internshipForm.company}
-                          onChange={(e) =>
-                            setInternshipForm({
-                              ...internshipForm,
-                              company: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="internship-description">
-                          Description
-                        </Label>
-                        <Textarea
-                          id="internship-description"
-                          value={internshipForm.description}
-                          onChange={(e) =>
-                            setInternshipForm({
-                              ...internshipForm,
-                              description: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      {/* Basic Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <Label htmlFor="internship-department">
-                            Department
+                          <Label
+                            htmlFor="internship-title"
+                            className="mb-3 block"
+                          >
+                            Internship Title *
+                          </Label>
+                          <Input
+                            id="internship-title"
+                            value={internshipForm.title}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                title: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., Software Development Intern"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="internship-company"
+                            className="mb-3 block"
+                          >
+                            Company *
+                          </Label>
+                          <Input
+                            id="internship-company"
+                            value={internshipForm.company}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                company: e.target.value,
+                              })
+                            }
+                            placeholder="Company name"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label
+                            htmlFor="internship-poster-role"
+                            className="mb-3 block"
+                          >
+                            Your Role *
+                          </Label>
+                          <SearchableSelect
+                            value={internshipForm.posterRole}
+                            onValueChange={(value) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                posterRole: value,
+                              })
+                            }
+                            options={roles.map((role) => ({
+                              value: role,
+                              label: role,
+                            }))}
+                            placeholder="Select your role"
+                            searchPlaceholder="Search roles..."
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="internship-department"
+                            className="mb-3 block"
+                          >
+                            Industry
                           </Label>
                           <Input
                             id="internship-department"
@@ -831,11 +1110,85 @@ export default function AdminComplete() {
                                 department: e.target.value,
                               })
                             }
-                            required
+                            placeholder="e.g., Engineering, Marketing"
                           />
                         </div>
+                      </div>
+
+                      {/* Description */}
+                      <div>
+                        <Label
+                          htmlFor="internship-description"
+                          className="mb-3 block"
+                        >
+                          Description *
+                        </Label>
+                        <Textarea
+                          id="internship-description"
+                          rows={4}
+                          value={internshipForm.description}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              description: e.target.value,
+                            })
+                          }
+                          placeholder="Describe the internship role, responsibilities, and what the intern will learn..."
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label
+                          htmlFor="internship-requirements"
+                          className="mb-3 block"
+                        >
+                          Requirements
+                        </Label>
+                        <Textarea
+                          id="internship-requirements"
+                          rows={3}
+                          value={internshipForm.requirements}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              requirements: e.target.value,
+                            })
+                          }
+                          placeholder="Education level, skills, experience required..."
+                        />
+                      </div>
+
+                      <div>
+                        <Label
+                          htmlFor="internship-skills"
+                          className="mb-3 block"
+                        >
+                          Required Skills
+                        </Label>
+                        <Textarea
+                          id="internship-skills"
+                          rows={2}
+                          value={internshipForm.skills}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              skills: e.target.value,
+                            })
+                          }
+                          placeholder="List key skills needed for this role..."
+                        />
+                      </div>
+
+                      {/* Internship Details */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                          <Label htmlFor="internship-duration">Duration</Label>
+                          <Label
+                            htmlFor="internship-duration"
+                            className="mb-3 block"
+                          >
+                            Duration *
+                          </Label>
                           <Input
                             id="internship-duration"
                             value={internshipForm.duration}
@@ -845,10 +1198,185 @@ export default function AdminComplete() {
                                 duration: e.target.value,
                               })
                             }
+                            placeholder="e.g., 3 months, Summer 2025"
                             required
                           />
                         </div>
+                        <div>
+                          <Label
+                            htmlFor="internship-positions"
+                            className="mb-3 block"
+                          >
+                            Number of Positions
+                          </Label>
+                          <Input
+                            id="internship-positions"
+                            type="number"
+                            min="1"
+                            value={internshipForm.positions}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                positions: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., 2"
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="internship-location"
+                            className="mb-3 block"
+                          >
+                            Location
+                          </Label>
+                          <Input
+                            id="internship-location"
+                            value={internshipForm.location}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                location: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., Cairo, Egypt or Remote"
+                          />
+                        </div>
                       </div>
+
+                      {/* Compensation */}
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                            id="internship-is-paid"
+                            type="checkbox"
+                            checked={internshipForm.isPaid}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                isPaid: e.target.checked,
+                              })
+                            }
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                          />
+                          <Label
+                            htmlFor="internship-is-paid"
+                            className="flex items-center gap-2"
+                          >
+                            This is a paid internship
+                          </Label>
+                        </div>
+
+                        {internshipForm.isPaid && (
+                          <div>
+                            <Label
+                              htmlFor="internship-stipend"
+                              className="mb-3 block"
+                            >
+                              Stipend Amount
+                            </Label>
+                            <Input
+                              id="internship-stipend"
+                              value={internshipForm.stipend}
+                              onChange={(e) =>
+                                setInternshipForm({
+                                  ...internshipForm,
+                                  stipend: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., 3,000 EGP/month"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Dates */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label
+                            htmlFor="internship-start-date"
+                            className="mb-3 block"
+                          >
+                            Start Date
+                          </Label>
+                          <Input
+                            id="internship-start-date"
+                            value={internshipForm.startDate}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                startDate: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., January 2025, Immediate"
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="internship-deadline"
+                            className="mb-3 block"
+                          >
+                            Application Deadline
+                          </Label>
+                          <Input
+                            id="internship-deadline"
+                            value={internshipForm.applicationDeadline}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                applicationDeadline: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., December 31, 2024"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Contact Information */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label
+                            htmlFor="internship-contact-email"
+                            className="mb-3 block"
+                          >
+                            Contact Email* (Visible to Admins Only)
+                          </Label>
+                          <Input
+                            id="internship-contact-email"
+                            type="email"
+                            value={internshipForm.contactEmail}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                contactEmail: e.target.value,
+                              })
+                            }
+                            placeholder="hr@company.com"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label
+                            htmlFor="internship-contact-phone"
+                            className="mb-3 block"
+                          >
+                            Contact Phone (Visible to Admins Only)
+                          </Label>
+                          <Input
+                            id="internship-contact-phone"
+                            type="tel"
+                            value={internshipForm.contactPhone}
+                            onChange={(e) =>
+                              setInternshipForm({
+                                ...internshipForm,
+                                contactPhone: e.target.value,
+                              })
+                            }
+                            placeholder="+20 10 1234 5678"
+                          />
+                        </div>
+                      </div>
+
                       <Button
                         type="submit"
                         disabled={createInternshipMutation.isPending}

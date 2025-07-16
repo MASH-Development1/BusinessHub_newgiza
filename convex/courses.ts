@@ -53,17 +53,40 @@ export const createCourse = mutation({
     is_online: v.boolean(),
     registration_url: v.optional(v.string()),
     skills: v.optional(v.string()),
+    sessionId: v.optional(v.string()), // Add sessionId to identify the current user
   },
   handler: async (ctx, args) => {
+    let userId = null;
+
+    // Get current user from session if sessionId provided
+    if (args.sessionId) {
+      const session = await ctx.db
+        .query("sessions")
+        .withIndex("session_id", (q) => q.eq("session_id", args.sessionId!))
+        .first();
+
+      if (session && new Date(session.expires_at) > new Date()) {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("email", (q) => q.eq("email", session.email))
+          .first();
+
+        if (user) {
+          userId = user._id;
+        }
+      }
+    }
+
     const now = new Date().toISOString();
+    const { sessionId, ...courseData } = args; // Remove sessionId from course data
 
     const courseId = await ctx.db.insert("courses", {
-      ...args,
+      ...courseData,
       current_attendees: 0,
       is_active: true,
       is_featured: false,
       is_approved: false,
-      posted_by: null,
+      posted_by: userId ? userId.toString() : null,
       created_at: now,
       updated_at: now,
     });

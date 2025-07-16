@@ -55,16 +55,42 @@ export const createJob = mutation({
     contact_phone: v.string(),
     poster_email: v.string(),
     poster_role: v.string(),
+    is_active: v.optional(v.boolean()),
+    is_approved: v.optional(v.boolean()),
+    status: v.optional(v.string()),
+    sessionId: v.optional(v.string()), // Add sessionId to identify the current user
   },
   handler: async (ctx, args) => {
+    let userId = null;
+
+    // Get current user from session if sessionId provided
+    if (args.sessionId) {
+      const session = await ctx.db
+        .query("sessions")
+        .withIndex("session_id", (q) => q.eq("session_id", args.sessionId!))
+        .first();
+
+      if (session && new Date(session.expires_at) > new Date()) {
+        const user = await ctx.db
+          .query("users")
+          .withIndex("email", (q) => q.eq("email", session.email))
+          .first();
+
+        if (user) {
+          userId = user._id;
+        }
+      }
+    }
+
     const now = new Date().toISOString();
+    const { sessionId, ...jobData } = args; // Remove sessionId from job data
 
     const jobId = await ctx.db.insert("jobs", {
-      ...args,
-      is_active: true,
-      is_approved: false,
-      status: "pending",
-      posted_by: null,
+      ...jobData,
+      is_active: args.is_active ?? true,
+      is_approved: args.is_approved ?? false,
+      status: args.status ?? "pending",
+      posted_by: userId ? userId.toString() : null,
       created_at: now,
       updated_at: now,
     });
