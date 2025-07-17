@@ -30,6 +30,7 @@ import {
   useCourses,
   useApplications,
   useProfiles,
+  useCvShowcase,
   useCommunityBenefits,
   useStats,
   useCreateJob,
@@ -92,6 +93,9 @@ import {
   UserCheck,
   User,
   Pencil,
+  Building,
+  Download,
+  Calendar,
 } from "lucide-react";
 
 const industries = [
@@ -265,6 +269,7 @@ export default function AdminComplete() {
   const { data: courses = [] } = useCourses();
   const { data: applications = [] } = useApplications();
   const { data: profiles = [] } = useProfiles();
+  const { data: cvShowcase = [] } = useCvShowcase();
   const { data: benefits = [] } = useCommunityBenefits();
   const { data: whitelist = [] } = useWhitelist();
   const { data: accessRequests = [] } = useAccessRequests();
@@ -1037,14 +1042,19 @@ export default function AdminComplete() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-12">
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="internships">Internships</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="benefits">Benefits</TabsTrigger>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="cvs">CVs</TabsTrigger>
+            <TabsTrigger value="cv-match">CV-Job Match</TabsTrigger>
+            <TabsTrigger value="directory">Directory</TabsTrigger>
             <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
             <TabsTrigger value="requests">Access Requests</TabsTrigger>
             <TabsTrigger value="removed">Removed Items</TabsTrigger>
+            <TabsTrigger value="backup">Backup</TabsTrigger>
           </TabsList>
 
           {/* Jobs Tab */}
@@ -2715,6 +2725,317 @@ export default function AdminComplete() {
                       from the main listings
                     </li>
                   </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Applications Tab */}
+          <TabsContent value="applications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  All Applications ({applications.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 h-[600px] overflow-y-auto">
+                  {applications.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No applications yet</p>
+                    </div>
+                  ) : (
+                    applications.map((application) => (
+                      <div
+                        key={application.id}
+                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold">
+                              {application.applicantName}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {application.applicantEmail}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {application.applicantPhone}
+                            </p>
+                            <div className="mt-2">
+                              <Badge
+                                variant={getStatusBadge(application.status)}
+                              >
+                                {application.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-500 mt-2">
+                              Applied: {formatDate(application.createdAt)}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                updateApplicationStatusMutation.mutate({
+                                  id: application.id,
+                                  status: "accepted",
+                                })
+                              }
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() =>
+                                updateApplicationStatusMutation.mutate({
+                                  id: application.id,
+                                  status: "rejected",
+                                })
+                              }
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* CVs Tab */}
+          <TabsContent value="cvs" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  CV Showcase Management ({cvShowcase.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 h-[600px] overflow-y-auto">
+                  {cvShowcase.length === 0 ? (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No CVs uploaded yet</p>
+                    </div>
+                  ) : (
+                    cvShowcase.map((cv) => (
+                      <div
+                        key={cv.id}
+                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold">{cv.name}</h3>
+                            <p className="text-sm text-gray-600">{cv.email}</p>
+                            <p className="text-sm text-gray-600">{cv.title}</p>
+                            <p className="text-sm text-gray-500">
+                              Uploaded: {formatDate(cv.createdAt)}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                cv.cvFilePath &&
+                                window.open(cv.cvFilePath, "_blank")
+                              }
+                            >
+                              View CV
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteCvMutation.mutate(cv.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* CV-Job Match Tab */}
+          <TabsContent value="cv-match" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  CV-Job Matching System
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      CV-Job Matching
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      AI-powered matching between CVs and job postings
+                    </p>
+                    <Button>Run Matching Algorithm</Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold mb-2">Top Matches</h4>
+                      <p className="text-sm text-gray-500">
+                        No matches calculated yet. Run the matching algorithm to
+                        see results.
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold mb-2">Match Statistics</h4>
+                      <p className="text-sm text-gray-500">
+                        Statistics will appear after running the matching
+                        process.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Directory Tab */}
+          <TabsContent value="directory" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Professional Directory ({profiles.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="space-y-4 h-[500px] overflow-y-auto">
+                    {profiles.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">
+                          No businesses in directory yet
+                        </p>
+                      </div>
+                    ) : (
+                      profiles.map((profile) => (
+                        <div
+                          key={profile.id}
+                          className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h3 className="font-semibold">{profile.name}</h3>
+                              <p className="text-sm text-gray-600">
+                                {profile.contact}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {profile.title}
+                              </p>
+                              {profile.bio && (
+                                <p className="text-sm text-gray-500 mt-2">
+                                  {profile.bio}
+                                </p>
+                              )}
+                              <p className="text-sm text-gray-500">
+                                Added: {formatDate(profile.createdAt)}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  // View profile details logic
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() =>
+                                  deleteProfileMutation.mutate(profile.id)
+                                }
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Backup Tab */}
+          <TabsContent value="backup" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  System Backup & Recovery
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="border rounded-lg p-4 text-center">
+                      <Download className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                      <h4 className="font-semibold">Create Backup</h4>
+                      <p className="text-sm text-gray-500 mb-3">
+                        Generate a full system backup
+                      </p>
+                      <Button size="sm">Start Backup</Button>
+                    </div>
+
+                    <div className="border rounded-lg p-4 text-center">
+                      <Upload className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                      <h4 className="font-semibold">Restore Backup</h4>
+                      <p className="text-sm text-gray-500 mb-3">
+                        Restore from existing backup
+                      </p>
+                      <Button size="sm" variant="outline">
+                        Browse Backups
+                      </Button>
+                    </div>
+
+                    <div className="border rounded-lg p-4 text-center">
+                      <Calendar className="h-8 w-8 text-purple-500 mx-auto mb-2" />
+                      <h4 className="font-semibold">Schedule Backup</h4>
+                      <p className="text-sm text-gray-500 mb-3">
+                        Set automatic backup schedule
+                      </p>
+                      <Button size="sm" variant="outline">
+                        Configure
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-semibold mb-3">Recent Backups</h4>
+                    <div className="text-center py-4">
+                      <p className="text-gray-500">No backups found</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
