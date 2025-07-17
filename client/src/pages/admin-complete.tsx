@@ -90,6 +90,8 @@ import {
   RotateCcw,
   Shield,
   UserCheck,
+  User,
+  Pencil,
 } from "lucide-react";
 
 const industries = [
@@ -211,6 +213,26 @@ export default function AdminComplete() {
     name: "",
     unit: "",
     phone: "",
+  });
+
+  // Dialog states for job management
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
+  const [isJobEditOpen, setIsJobEditOpen] = useState(false);
+  const [editJobForm, setEditJobForm] = useState({
+    title: "",
+    company: "",
+    posterRole: "",
+    description: "",
+    requirements: "",
+    location: "",
+    industry: "",
+    experienceLevel: "",
+    jobType: "",
+    skills: "",
+    salaryRange: "",
+    contactEmail: "",
+    contactPhone: "",
   });
 
   // Fetch data using Convex hooks
@@ -598,6 +620,151 @@ export default function AdminComplete() {
     }
   };
 
+  // Job management handlers
+  const viewJobDetails = (job: any) => {
+    setSelectedJob(job);
+    setIsJobDetailsOpen(true);
+  };
+
+  const editJob = (job: any) => {
+    setSelectedJob(job);
+    setEditJobForm({
+      title: job.title || "",
+      company: job.company || "",
+      posterRole: job.poster_role || "",
+      description: job.description || "",
+      requirements: job.requirements || "",
+      location: job.location || "",
+      industry: job.industry || "",
+      experienceLevel: job.experience_level || "",
+      jobType: job.job_type || "",
+      skills: job.skills || "",
+      salaryRange: job.salary_range || "",
+      contactEmail: job.contactEmail || "",
+      contactPhone: job.contactPhone || "",
+    });
+    setIsJobEditOpen(true);
+  };
+
+  const handleEditJobSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedJob) return;
+
+    updateJobMutation.mutate(
+      {
+        id: selectedJob.id,
+        title: editJobForm.title,
+        company: editJobForm.company,
+        poster_role: editJobForm.posterRole,
+        description: editJobForm.description,
+        requirements: editJobForm.requirements || undefined,
+        location: editJobForm.location || undefined,
+        industry: editJobForm.industry || undefined,
+        experience_level: editJobForm.experienceLevel || undefined,
+        job_type: editJobForm.jobType || undefined,
+        skills: editJobForm.skills || undefined,
+        salary_range: editJobForm.salaryRange || undefined,
+        contact_email: editJobForm.contactEmail,
+        contact_phone: editJobForm.contactPhone,
+      },
+      {
+        onSuccess: () => {
+          setIsJobEditOpen(false);
+          setSelectedJob(null);
+          setEditJobForm({
+            title: "",
+            company: "",
+            posterRole: "",
+            description: "",
+            requirements: "",
+            location: "",
+            industry: "",
+            experienceLevel: "",
+            jobType: "",
+            skills: "",
+            salaryRange: "",
+            contactEmail: "",
+            contactPhone: "",
+          });
+          toast({
+            title: "Success",
+            description: "Job updated successfully!",
+          });
+        },
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to update job",
+            variant: "destructive",
+          }),
+      }
+    );
+  };
+
+  const approveJob = (jobId: string) => {
+    updateJobMutation.mutate(
+      {
+        id: jobId as any,
+        is_approved: true,
+        status: "approved",
+      },
+      {
+        onSuccess: () =>
+          toast({
+            title: "Success",
+            description: "Job approved successfully!",
+          }),
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to approve job",
+            variant: "destructive",
+          }),
+      }
+    );
+  };
+
+  const rejectJob = (jobId: string) => {
+    updateJobMutation.mutate(
+      {
+        id: jobId as any,
+        is_approved: false,
+        status: "rejected",
+      },
+      {
+        onSuccess: () =>
+          toast({
+            title: "Success",
+            description: "Job rejected successfully!",
+          }),
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to reject job",
+            variant: "destructive",
+          }),
+      }
+    );
+  };
+
+  const deleteJob = (jobId: string) => {
+    if (window.confirm("Are you sure you want to delete this job?")) {
+      deleteJobMutation.mutate(jobId as any, {
+        onSuccess: () =>
+          toast({
+            title: "Success",
+            description: "Job deleted successfully!",
+          }),
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to delete job",
+            variant: "destructive",
+          }),
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -682,224 +849,199 @@ export default function AdminComplete() {
 
           {/* Jobs Tab */}
           <TabsContent value="jobs" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
-                  Manage Jobs
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="mb-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add New Job
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Add New Job</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleJobSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Create Job Form */}
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 dark:text-white">
+                    Create New Job
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleJobSubmit} className="space-y-4">
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Job Title *
+                      </Label>
+                      <Input
+                        value={jobForm.title}
+                        onChange={(e) =>
+                          setJobForm({ ...jobForm, title: e.target.value })
+                        }
+                        placeholder="e.g., Senior Software Engineer"
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Company *
+                      </Label>
+                      <Input
+                        value={jobForm.company}
+                        onChange={(e) =>
+                          setJobForm({ ...jobForm, company: e.target.value })
+                        }
+                        placeholder="Company name"
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Your Role in Company *
+                      </Label>
+                      <SearchableSelect
+                        value={jobForm.posterRole}
+                        onValueChange={(value) =>
+                          setJobForm({ ...jobForm, posterRole: value })
+                        }
+                        options={roles.map((role) => ({
+                          value: role,
+                          label: role,
+                        }))}
+                        placeholder="Select your role"
+                        searchPlaceholder="Search roles..."
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Job Description *
+                      </Label>
+                      <Textarea
+                        value={jobForm.description}
+                        onChange={(e) =>
+                          setJobForm({
+                            ...jobForm,
+                            description: e.target.value,
+                          })
+                        }
+                        placeholder="Describe the role, responsibilities, and what you're looking for..."
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        rows={3}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Requirements (Optional)
+                      </Label>
+                      <Textarea
+                        value={jobForm.requirements}
+                        onChange={(e) =>
+                          setJobForm({
+                            ...jobForm,
+                            requirements: e.target.value,
+                          })
+                        }
+                        placeholder="List the required skills, qualifications, and experience..."
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        rows={2}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="job-title" className="mb-3 block">
-                          Title *
-                        </Label>
-                        <Input
-                          id="job-title"
-                          value={jobForm.title}
-                          onChange={(e) =>
-                            setJobForm({ ...jobForm, title: e.target.value })
-                          }
-                          placeholder="e.g., Senior Software Engineer"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="job-company" className="mb-3 block">
-                          Company *
-                        </Label>
-                        <Input
-                          id="job-company"
-                          value={jobForm.company}
-                          onChange={(e) =>
-                            setJobForm({ ...jobForm, company: e.target.value })
-                          }
-                          placeholder="Company name"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="job-poster-role" className="mb-3 block">
-                          Your Role in Company *
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Industry (Optional)
                         </Label>
                         <SearchableSelect
-                          value={jobForm.posterRole}
+                          value={jobForm.industry}
                           onValueChange={(value) =>
-                            setJobForm({ ...jobForm, posterRole: value })
+                            setJobForm({ ...jobForm, industry: value })
                           }
-                          options={roles.map((role) => ({
-                            value: role,
-                            label: role,
+                          options={industries.map((industry) => ({
+                            value: industry,
+                            label: industry,
                           }))}
-                          placeholder="Select your role"
-                          searchPlaceholder="Search roles..."
+                          placeholder="Select industry"
+                          searchPlaceholder="Search industries..."
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="job-description" className="mb-3 block">
-                          Job Description *
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Location (Optional)
                         </Label>
-                        <Textarea
-                          id="job-description"
-                          value={jobForm.description}
+                        <Input
+                          value={jobForm.location}
                           onChange={(e) =>
-                            setJobForm({
-                              ...jobForm,
-                              description: e.target.value,
-                            })
+                            setJobForm({ ...jobForm, location: e.target.value })
                           }
-                          placeholder="Describe the role, responsibilities, and what you're looking for..."
-                          rows={4}
-                          required
+                          placeholder="e.g., Cairo, Egypt"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                         />
                       </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label
-                          htmlFor="job-requirements"
-                          className="mb-3 block"
-                        >
-                          Requirements (Optional)
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Experience Level (Optional)
                         </Label>
-                        <Textarea
-                          id="job-requirements"
-                          value={jobForm.requirements}
-                          onChange={(e) =>
-                            setJobForm({
-                              ...jobForm,
-                              requirements: e.target.value,
-                            })
+                        <SearchableSelect
+                          value={jobForm.experienceLevel}
+                          onValueChange={(value) =>
+                            setJobForm({ ...jobForm, experienceLevel: value })
                           }
-                          placeholder="List the required skills, qualifications, and experience..."
-                          rows={3}
+                          options={experienceLevels}
+                          placeholder="Select level"
+                          searchPlaceholder="Search levels..."
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="job-location" className="mb-3 block">
-                            Location (Optional)
-                          </Label>
-                          <Input
-                            id="job-location"
-                            value={jobForm.location}
-                            onChange={(e) =>
-                              setJobForm({
-                                ...jobForm,
-                                location: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., Cairo, Egypt"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="job-salary" className="mb-3 block">
-                            Salary Range (Optional)
-                          </Label>
-                          <Input
-                            id="job-salary"
-                            value={jobForm.salaryRange}
-                            onChange={(e) =>
-                              setJobForm({
-                                ...jobForm,
-                                salaryRange: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., 15,000 - 25,000 EGP"
-                          />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <Label
-                            htmlFor="job-experience"
-                            className="mb-3 block"
-                          >
-                            Experience Level (Optional)
-                          </Label>
-                          <SearchableSelect
-                            value={jobForm.experienceLevel}
-                            onValueChange={(value) =>
-                              setJobForm({
-                                ...jobForm,
-                                experienceLevel: value,
-                              })
-                            }
-                            options={experienceLevels}
-                            placeholder="Select level"
-                            searchPlaceholder="Search levels..."
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="job-industry" className="mb-3 block">
-                            Industry (Optional)
-                          </Label>
-                          <SearchableSelect
-                            value={jobForm.industry}
-                            onValueChange={(value) =>
-                              setJobForm({
-                                ...jobForm,
-                                industry: value,
-                              })
-                            }
-                            options={industries.map((industry) => ({
-                              value: industry,
-                              label: industry,
-                            }))}
-                            placeholder="Select industry"
-                            searchPlaceholder="Search industries..."
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="job-type" className="mb-3 block">
-                            Job Type (Optional)
-                          </Label>
-                          <SearchableSelect
-                            value={jobForm.jobType}
-                            onValueChange={(value) =>
-                              setJobForm({
-                                ...jobForm,
-                                jobType: value,
-                              })
-                            }
-                            options={jobTypes}
-                            placeholder="Select type"
-                            searchPlaceholder="Search types..."
-                          />
-                        </div>
-                      </div>
                       <div>
-                        <Label htmlFor="job-skills" className="mb-3 block">
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Job Type (Optional)
+                        </Label>
+                        <SearchableSelect
+                          value={jobForm.jobType}
+                          onValueChange={(value) =>
+                            setJobForm({ ...jobForm, jobType: value })
+                          }
+                          options={jobTypes}
+                          placeholder="Select type"
+                          searchPlaceholder="Search types..."
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-gray-700 dark:text-gray-300">
                           Required Skills (Optional)
                         </Label>
                         <Input
-                          id="job-skills"
                           value={jobForm.skills}
                           onChange={(e) =>
                             setJobForm({ ...jobForm, skills: e.target.value })
                           }
-                          placeholder="e.g., JavaScript, React, Node.js, SQL"
+                          placeholder="e.g., JavaScript, React, Node.js"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                         />
                       </div>
                       <div>
-                        <Label
-                          htmlFor="job-contact-email"
-                          className="mb-3 block"
-                        >
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Salary Range (Optional)
+                        </Label>
+                        <Input
+                          value={jobForm.salaryRange}
+                          onChange={(e) =>
+                            setJobForm({
+                              ...jobForm,
+                              salaryRange: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., 15,000 - 25,000 EGP"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-gray-700 dark:text-gray-300">
                           Contact Email *
                         </Label>
                         <Input
-                          id="job-contact-email"
                           type="email"
                           value={jobForm.contactEmail}
                           onChange={(e) =>
@@ -909,22 +1051,15 @@ export default function AdminComplete() {
                             })
                           }
                           placeholder="recruiter@company.com"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                           required
                         />
-                        <p className="text-sm text-muted-foreground mt-1">
-                          This email will only be visible to admins for
-                          applicant management
-                        </p>
                       </div>
                       <div>
-                        <Label
-                          htmlFor="job-contact-phone"
-                          className="mb-3 block"
-                        >
+                        <Label className="text-gray-700 dark:text-gray-300">
                           Contact Phone *
                         </Label>
                         <Input
-                          id="job-contact-phone"
                           type="tel"
                           value={jobForm.contactPhone}
                           onChange={(e) =>
@@ -934,71 +1069,170 @@ export default function AdminComplete() {
                             })
                           }
                           placeholder="+20 10 1234 5678"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                           required
                         />
-                        <p className="text-sm text-muted-foreground mt-1">
-                          This phone number will only be visible to admins for
-                          applicant management
-                        </p>
                       </div>
-                      <Button
-                        type="submit"
-                        disabled={createJobMutation.isPending}
-                      >
-                        {createJobMutation.isPending
-                          ? "Creating..."
-                          : "Create Job"}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      disabled={createJobMutation.isPending}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {createJobMutation.isPending
+                        ? "Creating..."
+                        : "Create Job"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-4">
-                  {jobs.map((job) => (
-                    <Card key={job.id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold">{job.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {job.company}
-                            </p>
-                            <p className="text-sm">{job.location}</p>
-                            <Badge variant={getStatusBadge(job.status)}>
-                              {job.status}
-                            </Badge>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                deleteJobMutation.mutate(job.id, {
-                                  onSuccess: () =>
-                                    toast({
-                                      title: "Success",
-                                      description: "Job deleted successfully!",
-                                    }),
-                                  onError: () =>
-                                    toast({
-                                      title: "Error",
-                                      description: "Failed to delete job",
-                                      variant: "destructive",
-                                    }),
-                                })
-                              }
-                              disabled={deleteJobMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+              {/* Job List */}
+              <Card className="bg-white border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-gray-900">
+                    All Jobs ({jobs.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 h-[840px] overflow-y-auto">
+                    {jobs.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">No jobs created yet</p>
+                      </div>
+                    ) : (
+                      jobs.map((job) => (
+                        <div
+                          key={job.id}
+                          className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900">
+                                {job.title}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                {job.company}
+                              </p>
+                              <div className="flex gap-2 mt-2">
+                                <Badge
+                                  variant={
+                                    job.status === "approved"
+                                      ? "default"
+                                      : job.status === "rejected"
+                                        ? "destructive"
+                                        : "secondary"
+                                  }
+                                  className={
+                                    job.status === "approved"
+                                      ? "bg-green-100 text-green-800 border-green-300"
+                                      : job.status === "rejected"
+                                        ? "bg-red-100 text-red-800 border-red-300"
+                                        : "bg-yellow-100 text-yellow-800 border-yellow-300"
+                                  }
+                                >
+                                  {job.status === "approved"
+                                    ? "Approved"
+                                    : job.status === "rejected"
+                                      ? "Rejected"
+                                      : "Pending"}
+                                </Badge>
+                                {job.industry && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-blue-700 border-blue-300 bg-blue-50"
+                                  >
+                                    {job.industry}
+                                  </Badge>
+                                )}
+                                {job.location && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-purple-700 border-purple-300 bg-purple-50"
+                                  >
+                                    {job.location}
+                                  </Badge>
+                                )}
+                                {job.salaryRange && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-green-700 border-green-300 bg-green-50"
+                                  >
+                                    {job.salaryRange}
+                                  </Badge>
+                                )}
+                              </div>
+                              {job.description && (
+                                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                                  {job.description.substring(0, 100)}...
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                onClick={() => viewJobDetails(job)}
+                                size="sm"
+                                variant="outline"
+                                className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              {job.status === "pending" && (
+                                <>
+                                  <Button
+                                    onClick={() => editJob(job)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-orange-300 text-orange-700 hover:bg-orange-50 bg-white"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    onClick={() => approveJob(job.id)}
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white border-0"
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    onClick={() => rejectJob(job.id)}
+                                    size="sm"
+                                    variant="destructive"
+                                    className="bg-red-600 hover:bg-red-700 text-white border-0"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                              {job.status === "approved" && (
+                                <Button
+                                  onClick={() => editJob(job)}
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-orange-300 text-orange-700 hover:bg-orange-50 bg-white"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button
+                                onClick={() => deleteJob(job.id)}
+                                size="sm"
+                                variant="destructive"
+                                className="bg-red-600 hover:bg-red-700 text-white border-0"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Internships Tab */}
@@ -1752,8 +1986,12 @@ export default function AdminComplete() {
                               {benefit.businessName}
                             </p>
                             <p className="text-sm">{benefit.location}</p>
-                            <Badge variant={getStatusBadge(benefit.status)}>
-                              {benefit.status}
+                            <Badge
+                              variant={
+                                benefit.isActive ? "default" : "secondary"
+                              }
+                            >
+                              {benefit.isActive ? "Active" : "Inactive"}
                             </Badge>
                           </div>
                           <div className="flex gap-2">
@@ -2251,6 +2489,545 @@ export default function AdminComplete() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Job Details Dialog */}
+        <Dialog open={isJobDetailsOpen} onOpenChange={setIsJobDetailsOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                Job Review: {selectedJob?.title}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedJob && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column - Job Information */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Briefcase className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Job Information
+                      </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Job Title
+                          </span>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {selectedJob.title}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Company
+                          </span>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {selectedJob.company}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Industry
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedJob.industry || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Job Type
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedJob.job_type || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Experience Level
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedJob.experience_level || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Location
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedJob.location || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Salary Range
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedJob.salary_range || "Not disclosed"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Status
+                          </span>
+                          <Badge
+                            variant={
+                              selectedJob.status === "approved"
+                                ? "default"
+                                : selectedJob.status === "rejected"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                            className={
+                              selectedJob.status === "approved"
+                                ? "bg-green-100 text-green-800 border-green-300"
+                                : selectedJob.status === "rejected"
+                                  ? "bg-red-100 text-red-800 border-red-300"
+                                  : "bg-yellow-100 text-yellow-800 border-yellow-300"
+                            }
+                          >
+                            {selectedJob.status === "approved"
+                              ? "Approved"
+                              : selectedJob.status === "rejected"
+                                ? "Rejected"
+                                : "Pending"}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Job Description
+                        </span>
+                        <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-700 rounded border">
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                            {selectedJob.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {selectedJob.requirements && (
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Requirements
+                          </span>
+                          <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-700 rounded border">
+                            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                              {selectedJob.requirements}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedJob.skills && (
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Required Skills
+                          </span>
+                          <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-700 rounded border">
+                            <p className="text-gray-700 dark:text-gray-300 text-sm">
+                              {selectedJob.skills}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Contact Email
+                          </span>
+                          <p className="text-blue-600 dark:text-blue-400 text-sm">
+                            {selectedJob.contactEmail}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Contact Phone
+                          </span>
+                          <p className="text-gray-900 dark:text-white text-sm">
+                            {selectedJob.contactPhone}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Job Poster Information & Timeline */}
+                <div className="space-y-6">
+                  {/* Job Poster Information Card */}
+                  <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                        Job Poster Information
+                      </h3>
+                    </div>
+
+                    {selectedJob.posterEmail ? (
+                      <div className="space-y-3">
+                        <div>
+                          <span className="block text-xs text-blue-700 dark:text-blue-300">
+                            Posted by:
+                          </span>
+                          <p className="text-blue-900 dark:text-blue-100 text-sm font-medium">
+                            {selectedJob.posterEmail}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-xs text-blue-700 dark:text-blue-300">
+                            Role:
+                          </span>
+                          <p className="text-blue-900 dark:text-blue-100 text-sm">
+                            {selectedJob.posterRole}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-blue-700 dark:text-blue-300 text-sm">
+                          No poster information available
+                        </p>
+                        <p className="text-blue-600 dark:text-blue-400 text-xs">
+                          Job created by admin
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Timeline Card */}
+                  <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">
+                        Timeline
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <span className="block text-xs text-green-700 dark:text-green-300">
+                          Posted Date:
+                        </span>
+                        <p className="text-green-900 dark:text-green-100 text-sm font-medium">
+                          {formatDate(selectedJob.createdAt)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-green-700 dark:text-green-300">
+                          Last Updated:
+                        </span>
+                        <p className="text-green-900 dark:text-green-100 text-sm font-medium">
+                          {formatDate(selectedJob.updatedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    {selectedJob.status === "pending" && (
+                      <Button
+                        onClick={() => {
+                          approveJob(selectedJob.id);
+                          setIsJobDetailsOpen(false);
+                        }}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Approve Job
+                      </Button>
+                    )}
+                    {selectedJob.status === "pending" && (
+                      <Button
+                        onClick={() => {
+                          rejectJob(selectedJob.id);
+                          setIsJobDetailsOpen(false);
+                        }}
+                        className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Reject Job
+                      </Button>
+                    )}
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        deleteJob(selectedJob.id);
+                        setIsJobDetailsOpen(false);
+                      }}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Job
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsJobDetailsOpen(false)}
+                      className="w-full"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Job Edit Dialog */}
+        <Dialog open={isJobEditOpen} onOpenChange={setIsJobEditOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Job</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditJobSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-job-title" className="mb-3 block">
+                  Title *
+                </Label>
+                <Input
+                  id="edit-job-title"
+                  value={editJobForm.title}
+                  onChange={(e) =>
+                    setEditJobForm({ ...editJobForm, title: e.target.value })
+                  }
+                  placeholder="e.g., Senior Software Engineer"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-job-company" className="mb-3 block">
+                  Company *
+                </Label>
+                <Input
+                  id="edit-job-company"
+                  value={editJobForm.company}
+                  onChange={(e) =>
+                    setEditJobForm({ ...editJobForm, company: e.target.value })
+                  }
+                  placeholder="Company name"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-job-poster-role" className="mb-3 block">
+                  Your Role in Company *
+                </Label>
+                <SearchableSelect
+                  value={editJobForm.posterRole}
+                  onValueChange={(value) =>
+                    setEditJobForm({ ...editJobForm, posterRole: value })
+                  }
+                  options={roles.map((role) => ({
+                    value: role,
+                    label: role,
+                  }))}
+                  placeholder="Select your role"
+                  searchPlaceholder="Search roles..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-job-description" className="mb-3 block">
+                  Job Description *
+                </Label>
+                <Textarea
+                  id="edit-job-description"
+                  value={editJobForm.description}
+                  onChange={(e) =>
+                    setEditJobForm({
+                      ...editJobForm,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Describe the role, responsibilities, and what you're looking for..."
+                  rows={4}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-job-requirements" className="mb-3 block">
+                  Requirements (Optional)
+                </Label>
+                <Textarea
+                  id="edit-job-requirements"
+                  value={editJobForm.requirements}
+                  onChange={(e) =>
+                    setEditJobForm({
+                      ...editJobForm,
+                      requirements: e.target.value,
+                    })
+                  }
+                  placeholder="List the required skills, qualifications, and experience..."
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-job-location" className="mb-3 block">
+                    Location (Optional)
+                  </Label>
+                  <Input
+                    id="edit-job-location"
+                    value={editJobForm.location}
+                    onChange={(e) =>
+                      setEditJobForm({
+                        ...editJobForm,
+                        location: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., Cairo, Egypt"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-job-salary" className="mb-3 block">
+                    Salary Range (Optional)
+                  </Label>
+                  <Input
+                    id="edit-job-salary"
+                    value={editJobForm.salaryRange}
+                    onChange={(e) =>
+                      setEditJobForm({
+                        ...editJobForm,
+                        salaryRange: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., 15,000 - 25,000 EGP"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="edit-job-experience" className="mb-3 block">
+                    Experience Level (Optional)
+                  </Label>
+                  <SearchableSelect
+                    value={editJobForm.experienceLevel}
+                    onValueChange={(value) =>
+                      setEditJobForm({
+                        ...editJobForm,
+                        experienceLevel: value,
+                      })
+                    }
+                    options={experienceLevels}
+                    placeholder="Select level"
+                    searchPlaceholder="Search levels..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-job-industry" className="mb-3 block">
+                    Industry (Optional)
+                  </Label>
+                  <SearchableSelect
+                    value={editJobForm.industry}
+                    onValueChange={(value) =>
+                      setEditJobForm({
+                        ...editJobForm,
+                        industry: value,
+                      })
+                    }
+                    options={industries.map((industry) => ({
+                      value: industry,
+                      label: industry,
+                    }))}
+                    placeholder="Select industry"
+                    searchPlaceholder="Search industries..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-job-type" className="mb-3 block">
+                    Job Type (Optional)
+                  </Label>
+                  <SearchableSelect
+                    value={editJobForm.jobType}
+                    onValueChange={(value) =>
+                      setEditJobForm({
+                        ...editJobForm,
+                        jobType: value,
+                      })
+                    }
+                    options={jobTypes}
+                    placeholder="Select type"
+                    searchPlaceholder="Search types..."
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="edit-job-skills" className="mb-3 block">
+                  Required Skills (Optional)
+                </Label>
+                <Input
+                  id="edit-job-skills"
+                  value={editJobForm.skills}
+                  onChange={(e) =>
+                    setEditJobForm({ ...editJobForm, skills: e.target.value })
+                  }
+                  placeholder="e.g., JavaScript, React, Node.js, SQL"
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-job-contact-email" className="mb-3 block">
+                  Contact Email *
+                </Label>
+                <Input
+                  id="edit-job-contact-email"
+                  type="email"
+                  value={editJobForm.contactEmail}
+                  onChange={(e) =>
+                    setEditJobForm({
+                      ...editJobForm,
+                      contactEmail: e.target.value,
+                    })
+                  }
+                  placeholder="recruiter@company.com"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-job-contact-phone" className="mb-3 block">
+                  Contact Phone *
+                </Label>
+                <Input
+                  id="edit-job-contact-phone"
+                  type="tel"
+                  value={editJobForm.contactPhone}
+                  onChange={(e) =>
+                    setEditJobForm({
+                      ...editJobForm,
+                      contactPhone: e.target.value,
+                    })
+                  }
+                  placeholder="+20 10 1234 5678"
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={updateJobMutation.isPending}>
+                  {updateJobMutation.isPending ? "Updating..." : "Update Job"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsJobEditOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
