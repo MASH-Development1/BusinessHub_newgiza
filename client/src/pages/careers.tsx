@@ -45,7 +45,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import ApplicationModal from "@/components/modals/application-modal";
-import { useJobs } from "@/lib/convexApi";
+import { useJobs, useCreateJob } from "@/lib/convexApi";
 import { useAuth } from "@/contexts/AuthContext";
 
 const jobSchema = z.object({
@@ -114,7 +114,8 @@ export default function Careers() {
   const { toast } = useToast();
 
   const { data: jobs = [] } = useJobs();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, sessionId } = useAuth();
+  const createJobMutation = useCreateJob(); // Using createJobMutation directly
 
   // Filter jobs based on industry and search
   const filteredJobs = jobs.filter((job: any) => {
@@ -146,41 +147,42 @@ export default function Careers() {
     },
   });
 
-  const postJobMutation = useMutation({
-    mutationFn: async (data: JobFormData) => {
-      const response = await fetch("/api/jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+  const onSubmit = async (data: JobFormData) => {
+    try {
+      await createJobMutation.mutateAsync({
+        title: data.title,
+        company: data.company,
+        poster_email: currentUser?.email || data.contactEmail,
+        poster_role: data.posterRole,
+        description: data.description,
+        requirements: data.requirements || undefined,
+        skills: data.skills || undefined,
+        industry: data.industry || undefined,
+        experience_level: data.experienceLevel || undefined,
+        job_type: data.jobType || undefined,
+        location: data.location || undefined,
+        salary_range: data.salaryRange || undefined,
+        contact_email: data.contactEmail,
+        contact_phone: data.contactPhone,
+        is_active: true,
+        is_approved: false, // User submissions need approval
+        status: "pending", // Pending status for user submissions
+        sessionId: sessionId || undefined,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to post job");
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
       toast({
         title: "Job Posted Successfully!",
         description: "Your job posting has been submitted for admin approval.",
       });
       form.reset();
       setIsPostJobOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
-    },
-    onError: (error: Error) => {
+    } catch (error: any) {
       toast({
         title: "Error",
         description: error.message || "Failed to post job. Please try again.",
         variant: "destructive",
       });
-    },
-  });
-
-  const onSubmit = (data: JobFormData) => {
-    postJobMutation.mutate(data);
+    }
   };
 
   // Only show approved and active jobs to regular users
@@ -503,10 +505,10 @@ export default function Careers() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={postJobMutation.isPending}
+                      disabled={createJobMutation.isPending}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
-                      {postJobMutation.isPending
+                      {createJobMutation.isPending
                         ? "Posting..."
                         : "Submit for Approval"}
                     </Button>
