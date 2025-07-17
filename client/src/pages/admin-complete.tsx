@@ -1049,7 +1049,6 @@ export default function AdminComplete() {
             <TabsTrigger value="benefits">Benefits</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="cvs">CVs</TabsTrigger>
-            <TabsTrigger value="cv-match">CV-Job Match</TabsTrigger>
             <TabsTrigger value="directory">Directory</TabsTrigger>
             <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
             <TabsTrigger value="requests">Access Requests</TabsTrigger>
@@ -2863,49 +2862,6 @@ export default function AdminComplete() {
                       </div>
                     ))
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* CV-Job Match Tab */}
-          <TabsContent value="cv-match" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  CV-Job Matching System
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      CV-Job Matching
-                    </h3>
-                    <p className="text-gray-500 mb-4">
-                      AI-powered matching between CVs and job postings
-                    </p>
-                    <Button>Run Matching Algorithm</Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Top Matches</h4>
-                      <p className="text-sm text-gray-500">
-                        No matches calculated yet. Run the matching algorithm to
-                        see results.
-                      </p>
-                    </div>
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold mb-2">Match Statistics</h4>
-                      <p className="text-sm text-gray-500">
-                        Statistics will appear after running the matching
-                        process.
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
