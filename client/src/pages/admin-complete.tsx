@@ -360,7 +360,7 @@ export default function AdminComplete() {
         contact_phone: jobForm.contactPhone,
         is_active: true,
         is_approved: true,
-        status: "active",
+        status: "approved",
         sessionId: sessionId || undefined,
       },
       {
