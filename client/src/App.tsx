@@ -98,83 +98,85 @@ function AppRoutes() {
   return (
     <>
       {isAuthenticated && <Navbar />}
-      <Switch>
-        {/* Public routes */}
-        <Route path="/login">
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        </Route>
-        <Route path="/admin-login">
-          <PublicRoute>
-            <AdminLogin />
-          </PublicRoute>
-        </Route>
-        <Route path="/test-auth">
-          <TestAuth />
-        </Route>
-        {/* Protected routes */}
-        <Route path="/">
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/admin">
-          <ProtectedRoute requireAdmin>
-            <AdminComplete />
-          </ProtectedRoute>
-        </Route>
+      <div className="pt-16">
+        <Switch>
+          {/* Public routes */}
+          <Route path="/login">
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          </Route>
+          <Route path="/admin-login">
+            <PublicRoute>
+              <AdminLogin />
+            </PublicRoute>
+          </Route>
+          <Route path="/test-auth">
+            <TestAuth />
+          </Route>
+          {/* Protected routes */}
+          <Route path="/">
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/admin">
+            <ProtectedRoute requireAdmin>
+              <AdminComplete />
+            </ProtectedRoute>
+          </Route>
 
-        <Route path="/careers">
-          <ProtectedRoute>
-            <Careers />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/internships">
-          <ProtectedRoute>
-            <Internships />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/courses">
-          <ProtectedRoute>
-            <Courses />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/directory">
-          <ProtectedRoute>
-            <Directory />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/cv-showcase">
-          <ProtectedRoute>
-            <CvShowcase />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/cv-upload">
-          <ProtectedRoute>
-            <CvUpload />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/submit-internship">
-          <ProtectedRoute>
-            <SubmitInternship />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/join-community">
-          <ProtectedRoute>
-            <JoinCommunity />
-          </ProtectedRoute>
-        </Route>
-        <Route path="/community-benefits">
-          <ProtectedRoute>
-            <CommunityBenefits />
-          </ProtectedRoute>
-        </Route>
-        {/* Catch all */}
-        <Route>
-          <NotFound />
-        </Route>
-      </Switch>
+          <Route path="/careers">
+            <ProtectedRoute>
+              <Careers />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/internships">
+            <ProtectedRoute>
+              <Internships />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/courses">
+            <ProtectedRoute>
+              <Courses />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/directory">
+            <ProtectedRoute>
+              <Directory />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/cv-showcase">
+            <ProtectedRoute>
+              <CvShowcase />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/cv-upload">
+            <ProtectedRoute>
+              <CvUpload />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/submit-internship">
+            <ProtectedRoute>
+              <SubmitInternship />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/join-community">
+            <ProtectedRoute>
+              <JoinCommunity />
+            </ProtectedRoute>
+          </Route>
+          <Route path="/community-benefits">
+            <ProtectedRoute>
+              <CommunityBenefits />
+            </ProtectedRoute>
+          </Route>
+          {/* Catch all */}
+          <Route>
+            <NotFound />
+          </Route>
+        </Switch>
+      </div>
     </>
   );
 }
