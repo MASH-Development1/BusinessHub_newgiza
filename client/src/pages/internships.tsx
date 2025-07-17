@@ -5,56 +5,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  PlusCircle, 
-  Search, 
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "wouter";
+import {
+  PlusCircle,
+  Search,
   Filter,
-  MapPin, 
-  Clock, 
-  Users, 
-  DollarSign, 
+  MapPin,
+  Clock,
+  Users,
+  DollarSign,
   Calendar,
   Eye,
   Mail,
   Phone,
   FileText,
-  X
+  X,
 } from "lucide-react";
-import { useInternships, useCreateInternshipApplication } from "@/lib/convexApi";
-
-interface Internship {
-  id: number;
-  title: string;
-  company: string;
-  posterEmail: string;
-  posterRole: string;
-  description: string;
-  requirements?: string;
-  skills?: string;
-  department?: string;
-  duration: string;
-  isPaid: boolean;
-  stipend?: string;
-  location?: string;
-  positions: number;
-  contactEmail: string;
-  contactPhone?: string;
-  startDate?: string;
-  applicationDeadline?: string;
-  isActive: boolean;
-  isApproved: boolean;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import {
+  useInternships,
+  useCreateInternshipApplication,
+} from "@/lib/convexApi";
+import type { Internship } from "@/lib/typeAdapter";
 
 export default function Internships() {
   const { toast } = useToast();
+  const { user, isAdmin } = useAuth();
+  const [, navigate] = useLocation();
   const queryClient = useQueryClient();
-  const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null);
+  const [selectedInternship, setSelectedInternship] =
+    useState<Internship | null>(null);
   const [showApplication, setShowApplication] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,28 +53,28 @@ export default function Internships() {
     applicantName: "",
     applicantEmail: "",
     applicantPhone: "",
-    coverLetter: ""
+    coverLetter: "",
   });
   const [cvFile, setCvFile] = useState<File | null>(null);
-
-  // Fetch current user
-  const { data: user } = useQuery({
-    queryKey: ["/api/auth/me"],
-    retry: false,
+  const [applicationErrors, setApplicationErrors] = useState({
+    applicantName: "",
+    applicantEmail: "",
+    applicantPhone: "",
+    cv: "",
   });
 
   // Fetch internships
   const { data: internships = [], isLoading } = useInternships();
 
   // Filter approved and active internships
-  const approvedInternships = (internships as Internship[]).filter((internship: Internship) => 
-    internship.isApproved && internship.isActive
-  );
+  const approvedInternships = internships.filter((internship: Internship) => {
+    return internship.isApproved && internship.isActive;
+  });
 
   // Get all sectors including predefined ones like jobs and CVs
   const predefinedSectors = [
     "Technology",
-    "Finance", 
+    "Finance",
     "Marketing",
     "Healthcare",
     "Education",
@@ -98,28 +87,41 @@ export default function Internships() {
     "Real Estate",
     "Legal",
     "Design",
-    "Other"
+    "Other",
   ];
-  
-  const dynamicSectors = Array.from(new Set(
-    approvedInternships
-      .map((internship: Internship) => internship.department)
-      .filter((dept: any): dept is string => Boolean(dept) && typeof dept === 'string' && dept.trim() !== '')
-  ));
-  
-  const sectors = Array.from(new Set([...predefinedSectors, ...dynamicSectors])).sort();
+
+  const dynamicSectors = Array.from(
+    new Set(
+      approvedInternships
+        .map((internship: Internship) => internship.department)
+        .filter(
+          (dept: any): dept is string =>
+            Boolean(dept) && typeof dept === "string" && dept.trim() !== ""
+        )
+    )
+  );
+
+  const sectors = Array.from(
+    new Set([...predefinedSectors, ...dynamicSectors])
+  ).sort();
 
   // Apply search and sector filters
-  const filteredInternships = approvedInternships.filter((internship: Internship) => {
-    const matchesSearch = searchTerm === "" || 
-      internship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      internship.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      internship.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSector = sectorFilter === "" || sectorFilter === "all" || internship.department === sectorFilter;
-    
-    return matchesSearch && matchesSector;
-  });
+  const filteredInternships = approvedInternships.filter(
+    (internship: Internship) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        internship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        internship.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        internship.description.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesSector =
+        sectorFilter === "" ||
+        sectorFilter === "all" ||
+        internship.department === sectorFilter;
+
+      return matchesSearch && matchesSector;
+    }
+  );
 
   const applyMutation = useCreateInternshipApplication();
 
@@ -127,6 +129,20 @@ export default function Internships() {
     setSelectedInternship(internship);
     setShowApplication(true);
     setShowDetails(false);
+    // Reset form and errors when opening application modal
+    setApplicationData({
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      coverLetter: "",
+    });
+    setCvFile(null);
+    setApplicationErrors({
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      cv: "",
+    });
   };
 
   const handleViewDetails = (internship: Internship) => {
@@ -135,33 +151,129 @@ export default function Internships() {
     setShowApplication(false);
   };
 
+  const handleCloseApplication = () => {
+    setShowApplication(false);
+    setSelectedInternship(null);
+    setApplicationData({
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      coverLetter: "",
+    });
+    setCvFile(null);
+    setApplicationErrors({
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      cv: "",
+    });
+  };
+
   const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!cvFile) {
+
+    // Reset errors
+    setApplicationErrors({
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      cv: "",
+    });
+
+    // Validation
+    let hasErrors = false;
+    const newErrors = {
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      cv: "",
+    };
+
+    if (!applicationData.applicantName.trim()) {
+      newErrors.applicantName = "Full name is required";
+      hasErrors = true;
+    }
+
+    if (!applicationData.applicantEmail.trim()) {
+      newErrors.applicantEmail = "Email is required";
+      hasErrors = true;
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(applicationData.applicantEmail)
+    ) {
+      newErrors.applicantEmail = "Please enter a valid email address";
+      hasErrors = true;
+    }
+
+    if (!applicationData.applicantPhone.trim()) {
+      newErrors.applicantPhone = "Phone number is required";
+      hasErrors = true;
+    }
+
+    if (!selectedInternship) {
       toast({
-        title: "CV Required",
-        description: "Please upload your CV to apply.",
+        title: "Error",
+        description: "No internship selected.",
         variant: "destructive",
       });
       return;
     }
 
+    if (!cvFile) {
+      newErrors.cv = "CV is required";
+      hasErrors = true;
+    }
+
+    if (hasErrors) {
+      setApplicationErrors(newErrors);
+      return;
+    }
+
     const formData = new FormData();
+    formData.append("internshipId", selectedInternship.id.toString());
     formData.append("applicantName", applicationData.applicantName);
     formData.append("applicantEmail", applicationData.applicantEmail);
     formData.append("applicantPhone", applicationData.applicantPhone);
     formData.append("coverLetter", applicationData.coverLetter);
     formData.append("cv", cvFile);
 
-    applyMutation.mutate(formData);
+    applyMutation.mutate(formData, {
+      onSuccess: () => {
+        toast({
+          title: "Application Submitted",
+          description: "Your application has been submitted successfully!",
+        });
+        setShowApplication(false);
+        setSelectedInternship(null);
+        setApplicationData({
+          applicantName: "",
+          applicantEmail: "",
+          applicantPhone: "",
+          coverLetter: "",
+        });
+        setCvFile(null);
+        setApplicationErrors({
+          applicantName: "",
+          applicantEmail: "",
+          applicantPhone: "",
+          cv: "",
+        });
+      },
+      onError: (error: any) => {
+        toast({
+          title: "Application Failed",
+          description:
+            error?.message || "Failed to submit application. Please try again.",
+          variant: "destructive",
+        });
+      },
+    });
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -171,7 +283,9 @@ export default function Internships() {
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-white">{selectedInternship?.title}</h2>
+              <h2 className="text-2xl font-bold text-white">
+                {selectedInternship?.title}
+              </h2>
               <p className="text-gray-300">{selectedInternship?.company}</p>
             </div>
             <Button
@@ -191,20 +305,30 @@ export default function Internships() {
             {/* Main Details */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
-                <p className="text-gray-300">{selectedInternship?.description}</p>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Description
+                </h3>
+                <p className="text-gray-300">
+                  {selectedInternship?.description}
+                </p>
               </div>
 
               {selectedInternship?.requirements && (
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Requirements</h3>
-                  <p className="text-gray-300">{selectedInternship.requirements}</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Requirements
+                  </h3>
+                  <p className="text-gray-300">
+                    {selectedInternship.requirements}
+                  </p>
                 </div>
               )}
 
               {selectedInternship?.skills && (
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Skills</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Skills
+                  </h3>
                   <p className="text-gray-300">{selectedInternship.skills}</p>
                 </div>
               )}
@@ -213,7 +337,9 @@ export default function Internships() {
             {/* Details & Contact */}
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Details</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Details
+                </h3>
                 <div className="space-y-2 text-gray-300">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
@@ -239,7 +365,9 @@ export default function Internships() {
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
                       <span>Paid Internship</span>
-                      {selectedInternship.stipend && <span>- {selectedInternship.stipend}</span>}
+                      {selectedInternship.stipend && (
+                        <span> - {selectedInternship.stipend}</span>
+                      )}
                     </div>
                   )}
                   {selectedInternship?.startDate && (
@@ -251,16 +379,23 @@ export default function Internships() {
                   {selectedInternship?.applicationDeadline && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      <span>Deadline: {selectedInternship.applicationDeadline}</span>
+                      <span>
+                        Deadline: {selectedInternship.applicationDeadline}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Admin-only Contact Information */}
-              {(user as any)?.isAdmin && (
+              {isAdmin && (
                 <div>
-                  <h3 className="text-lg font-semibold text-white mb-2">Contact Information <span className="text-sm text-orange-500">(Admin Only)</span></h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">
+                    Contact Information{" "}
+                    <span className="text-sm text-orange-500">
+                      (Admin Only)
+                    </span>
+                  </h3>
                   <div className="space-y-2 text-gray-300">
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4" />
@@ -277,7 +412,7 @@ export default function Internships() {
               )}
 
               <div className="pt-4">
-                <Button 
+                <Button
                   onClick={() => {
                     setShowDetails(false);
                     handleApply(selectedInternship!);
@@ -299,10 +434,17 @@ export default function Internships() {
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <CardTitle className="text-lg mb-2 text-white">{internship.title}</CardTitle>
-            <p className="text-gray-300 font-medium mb-2">{internship.company}</p>
+            <CardTitle className="text-lg mb-2 text-white">
+              {internship.title}
+            </CardTitle>
+            <p className="text-gray-300 font-medium mb-2">
+              {internship.company}
+            </p>
             {internship.department && (
-              <Badge variant="secondary" className="text-xs bg-gray-700 text-gray-300">
+              <Badge
+                variant="secondary"
+                className="text-xs bg-gray-700 text-gray-300"
+              >
                 {internship.department}
               </Badge>
             )}
@@ -318,8 +460,10 @@ export default function Internships() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-gray-400 text-sm line-clamp-3">{internship.description}</p>
-        
+        <p className="text-gray-400 text-sm line-clamp-3">
+          {internship.description}
+        </p>
+
         <div className="space-y-2 text-sm text-gray-300">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
@@ -333,12 +477,17 @@ export default function Internships() {
           )}
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            <span>{internship.positions} position{internship.positions !== 1 ? 's' : ''}</span>
+            <span>
+              {internship.positions} position
+              {internship.positions !== 1 ? "s" : ""}
+            </span>
           </div>
           {internship.isPaid && (
             <div className="flex items-center gap-2">
               <DollarSign className="w-4 h-4" />
-              <span>Paid{internship.stipend ? ` - ${internship.stipend}` : ''}</span>
+              <span>
+                Paid{internship.stipend ? ` - ${internship.stipend}` : ""}
+              </span>
             </div>
           )}
           {internship.applicationDeadline && (
@@ -349,7 +498,7 @@ export default function Internships() {
           )}
         </div>
 
-        <Button 
+        <Button
           onClick={() => handleApply(internship)}
           className="w-full bg-orange-500 hover:bg-orange-600 text-white"
         >
@@ -364,14 +513,13 @@ export default function Internships() {
       <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-white">Apply for {selectedInternship?.title}</h2>
+            <h2 className="text-xl font-bold text-white">
+              Apply for {selectedInternship?.title}
+            </h2>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setShowApplication(false);
-                setSelectedInternship(null);
-              }}
+              onClick={handleCloseApplication}
               className="border-gray-600 text-gray-300 hover:bg-gray-800"
             >
               <X className="w-4 h-4" />
@@ -380,59 +528,124 @@ export default function Internships() {
 
           <form onSubmit={handleSubmitApplication} className="space-y-4">
             <div>
-              <Label htmlFor="applicantName" className="text-white">Full Name *</Label>
+              <Label htmlFor="applicantName" className="text-white">
+                Full Name *
+              </Label>
               <Input
                 id="applicantName"
                 value={applicationData.applicantName}
-                onChange={(e) => setApplicationData(prev => ({
-                  ...prev,
-                  applicantName: e.target.value
-                }))}
+                onChange={(e) => {
+                  setApplicationData((prev) => ({
+                    ...prev,
+                    applicantName: e.target.value,
+                  }));
+                  if (applicationErrors.applicantName) {
+                    setApplicationErrors((prev) => ({
+                      ...prev,
+                      applicantName: "",
+                    }));
+                  }
+                }}
                 required
-                className="bg-gray-800 border-gray-600 text-white"
+                className={`bg-gray-800 border-gray-600 text-white ${
+                  applicationErrors.applicantName ? "border-red-500" : ""
+                }`}
               />
+              {applicationErrors.applicantName && (
+                <p className="text-red-400 text-sm mt-1">
+                  {applicationErrors.applicantName}
+                </p>
+              )}
             </div>
 
             <div>
-              <Label htmlFor="applicantEmail" className="text-white">Email *</Label>
+              <Label htmlFor="applicantEmail" className="text-white">
+                Email *
+              </Label>
               <Input
                 id="applicantEmail"
                 type="email"
                 value={applicationData.applicantEmail}
-                onChange={(e) => setApplicationData(prev => ({
-                  ...prev,
-                  applicantEmail: e.target.value
-                }))}
+                onChange={(e) => {
+                  setApplicationData((prev) => ({
+                    ...prev,
+                    applicantEmail: e.target.value,
+                  }));
+                  if (applicationErrors.applicantEmail) {
+                    setApplicationErrors((prev) => ({
+                      ...prev,
+                      applicantEmail: "",
+                    }));
+                  }
+                }}
                 required
-                className="bg-gray-800 border-gray-600 text-white"
+                className={`bg-gray-800 border-gray-600 text-white ${
+                  applicationErrors.applicantEmail ? "border-red-500" : ""
+                }`}
               />
+              {applicationErrors.applicantEmail && (
+                <p className="text-red-400 text-sm mt-1">
+                  {applicationErrors.applicantEmail}
+                </p>
+              )}
             </div>
 
             <div>
-              <Label htmlFor="applicantPhone" className="text-white">Phone Number *</Label>
+              <Label htmlFor="applicantPhone" className="text-white">
+                Phone Number *
+              </Label>
               <Input
                 id="applicantPhone"
                 value={applicationData.applicantPhone}
-                onChange={(e) => setApplicationData(prev => ({
-                  ...prev,
-                  applicantPhone: e.target.value
-                }))}
+                onChange={(e) => {
+                  setApplicationData((prev) => ({
+                    ...prev,
+                    applicantPhone: e.target.value,
+                  }));
+                  if (applicationErrors.applicantPhone) {
+                    setApplicationErrors((prev) => ({
+                      ...prev,
+                      applicantPhone: "",
+                    }));
+                  }
+                }}
                 required
-                className="bg-gray-800 border-gray-600 text-white"
+                className={`bg-gray-800 border-gray-600 text-white ${
+                  applicationErrors.applicantPhone ? "border-red-500" : ""
+                }`}
               />
+              {applicationErrors.applicantPhone && (
+                <p className="text-red-400 text-sm mt-1">
+                  {applicationErrors.applicantPhone}
+                </p>
+              )}
             </div>
 
             <div>
-              <Label htmlFor="cv" className="text-white">Upload CV *</Label>
+              <Label htmlFor="cv" className="text-white">
+                Upload CV *
+              </Label>
               <div className="mt-1">
                 <input
                   id="cv"
                   type="file"
                   accept=".pdf,.doc,.docx"
-                  onChange={(e) => setCvFile(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600"
+                  onChange={(e) => {
+                    setCvFile(e.target.files?.[0] || null);
+                    if (applicationErrors.cv) {
+                      setApplicationErrors((prev) => ({ ...prev, cv: "" }));
+                    }
+                  }}
+                  className={`block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600 ${
+                    applicationErrors.cv ? "border border-red-500 rounded" : ""
+                  }`}
                 />
               </div>
+              {applicationErrors.cv && (
+                <p className="text-red-400 text-sm mt-1">
+                  {applicationErrors.cv}
+                </p>
+              )}
               {cvFile && (
                 <p className="text-sm text-green-400 mt-1">
                   <FileText className="w-4 h-4 inline mr-1" />
@@ -442,16 +655,20 @@ export default function Internships() {
             </div>
 
             <div>
-              <Label htmlFor="coverLetter" className="text-white">Cover Letter</Label>
+              <Label htmlFor="coverLetter" className="text-white">
+                Cover Letter
+              </Label>
               <Textarea
                 id="coverLetter"
                 rows={4}
                 placeholder="Tell us why you're interested in this internship..."
                 value={applicationData.coverLetter}
-                onChange={(e) => setApplicationData(prev => ({
-                  ...prev,
-                  coverLetter: e.target.value
-                }))}
+                onChange={(e) =>
+                  setApplicationData((prev) => ({
+                    ...prev,
+                    coverLetter: e.target.value,
+                  }))
+                }
                 className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
               />
             </div>
@@ -462,15 +679,14 @@ export default function Internships() {
                 disabled={applyMutation.isPending}
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >
-                {applyMutation.isPending ? "Submitting..." : "Submit Application"}
+                {applyMutation.isPending
+                  ? "Submitting..."
+                  : "Submit Application"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setShowApplication(false);
-                  setSelectedInternship(null);
-                }}
+                onClick={handleCloseApplication}
                 className="border-gray-600 text-gray-300 hover:bg-gray-800"
               >
                 Cancel
@@ -487,13 +703,15 @@ export default function Internships() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 text-white">Internship Opportunities</h1>
+          <h1 className="text-4xl font-bold mb-4 text-white">
+            Internship Opportunities
+          </h1>
           <p className="text-xl text-gray-300 mb-6">
             Launch your career with internships from the NewGiza community
           </p>
-          <Button 
+          <Button
             className="bg-orange-500 hover:bg-orange-600 text-white"
-            onClick={() => window.location.href = '/submit-internship'}
+            onClick={() => navigate("/submit-internship")}
           >
             <PlusCircle className="w-4 h-4 mr-2" />
             Submit Internship Opportunity
@@ -523,9 +741,15 @@ export default function Internships() {
                   </div>
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-600">
-                  <SelectItem value="all" className="text-white">All Sectors</SelectItem>
+                  <SelectItem value="all" className="text-white">
+                    All Sectors
+                  </SelectItem>
                   {sectors.map((sector) => (
-                    <SelectItem key={sector} value={sector} className="text-white">
+                    <SelectItem
+                      key={sector}
+                      value={sector}
+                      className="text-white"
+                    >
                       {sector}
                     </SelectItem>
                   ))}
@@ -544,10 +768,12 @@ export default function Internships() {
         ) : filteredInternships.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No internships found</h3>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              No internships found
+            </h3>
             <p className="text-gray-400">
-              {searchTerm || sectorFilter !== "all" && sectorFilter !== "" 
-                ? "Try adjusting your search or filter criteria." 
+              {searchTerm || (sectorFilter !== "all" && sectorFilter !== "")
+                ? "Try adjusting your search or filter criteria."
                 : "Be the first to submit an internship opportunity!"}
             </p>
           </div>

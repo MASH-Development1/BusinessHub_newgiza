@@ -1,20 +1,35 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { insertInternshipSchema } from "@shared/schema";
-import { GraduationCap, Building2, Clock, Users, DollarSign } from "lucide-react";
+import {
+  GraduationCap,
+  Building2,
+  Clock,
+  Users,
+  DollarSign,
+} from "lucide-react";
 import { useLocation } from "wouter";
+import { useCreateInternship } from "@/lib/convexApi";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SubmitInternship() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const { user, sessionId } = useAuth();
+  const createInternshipMutation = useCreateInternship();
   const [formData, setFormData] = useState({
     title: "",
     company: "",
@@ -28,63 +43,64 @@ export default function SubmitInternship() {
     stipend: "",
     location: "",
     positions: 1,
-    contactEmail: "",
+    contactEmail: user?.email || "",
     contactPhone: "",
     startDate: "",
     applicationDeadline: "",
   });
 
-  const submitMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const response = await fetch("/api/internships", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit internship");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Internship Submitted",
-        description: "Your internship posting has been submitted for admin approval.",
-      });
-      navigate("/internships");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Submission Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const validatedData = insertInternshipSchema.parse({
         ...formData,
         positions: Number(formData.positions),
       });
-      submitMutation.mutate(formData);
+
+      await createInternshipMutation.mutateAsync({
+        title: formData.title,
+        company: formData.company,
+        poster_email: user?.email || formData.contactEmail,
+        poster_role: formData.posterRole,
+        description: formData.description,
+        requirements: formData.requirements || undefined,
+        skills: formData.skills || undefined,
+        department: formData.department || undefined,
+        duration: formData.duration,
+        is_paid: formData.isPaid,
+        stipend: formData.stipend || undefined,
+        location: formData.location || undefined,
+        positions: Number(formData.positions),
+        contact_email: formData.contactEmail,
+        contact_phone: formData.contactPhone || undefined,
+        start_date: formData.startDate || undefined,
+        application_deadline: formData.applicationDeadline || undefined,
+        is_active: true,
+        is_approved: false, // User submissions need approval
+        sessionId: sessionId || undefined,
+      });
+
+      toast({
+        title: "Internship Submitted",
+        description:
+          "Your internship posting has been submitted for admin approval.",
+      });
+      navigate("/internships");
     } catch (error: any) {
       toast({
-        title: "Validation Error",
-        description: "Please check all required fields and try again.",
+        title: "Submission Failed",
+        description:
+          error.message || "Failed to submit internship. Please try again.",
         variant: "destructive",
       });
     }
   };
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -131,7 +147,9 @@ export default function SubmitInternship() {
                   <Input
                     id="company"
                     value={formData.company}
-                    onChange={(e) => handleInputChange("company", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("company", e.target.value)
+                    }
                     placeholder="Company name"
                     required
                   />
@@ -144,14 +162,21 @@ export default function SubmitInternship() {
                   <Input
                     id="posterRole"
                     value={formData.posterRole}
-                    onChange={(e) => handleInputChange("posterRole", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("posterRole", e.target.value)
+                    }
                     placeholder="e.g., HR Manager, Team Lead"
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="department">Industry</Label>
-                  <Select value={formData.department} onValueChange={(value) => handleInputChange("department", value)}>
+                  <Label htmlFor="department">Industry (Optional)</Label>
+                  <Select
+                    value={formData.department}
+                    onValueChange={(value) =>
+                      handleInputChange("department", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select industry" />
                     </SelectTrigger>
@@ -163,10 +188,14 @@ export default function SubmitInternship() {
                       <SelectItem value="Education">Education</SelectItem>
                       <SelectItem value="Engineering">Engineering</SelectItem>
                       <SelectItem value="Sales">Sales</SelectItem>
-                      <SelectItem value="Human Resources">Human Resources</SelectItem>
+                      <SelectItem value="Human Resources">
+                        Human Resources
+                      </SelectItem>
                       <SelectItem value="Operations">Operations</SelectItem>
                       <SelectItem value="Consulting">Consulting</SelectItem>
-                      <SelectItem value="Media & Communications">Media & Communications</SelectItem>
+                      <SelectItem value="Media & Communications">
+                        Media & Communications
+                      </SelectItem>
                       <SelectItem value="Real Estate">Real Estate</SelectItem>
                       <SelectItem value="Legal">Legal</SelectItem>
                       <SelectItem value="Design">Design</SelectItem>
@@ -183,25 +212,29 @@ export default function SubmitInternship() {
                   id="description"
                   rows={4}
                   value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   placeholder="Describe the internship role, responsibilities, and what the intern will learn..."
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="requirements">Requirements</Label>
+                <Label htmlFor="requirements">Requirements (Optional)</Label>
                 <Textarea
                   id="requirements"
                   rows={3}
                   value={formData.requirements}
-                  onChange={(e) => handleInputChange("requirements", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("requirements", e.target.value)
+                  }
                   placeholder="Education level, skills, experience required..."
                 />
               </div>
 
               <div>
-                <Label htmlFor="skills">Required Skills</Label>
+                <Label htmlFor="skills">Required Skills (Optional)</Label>
                 <Textarea
                   id="skills"
                   rows={2}
@@ -215,7 +248,12 @@ export default function SubmitInternship() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <Label htmlFor="duration">Duration *</Label>
-                  <Select value={formData.duration} onValueChange={(value) => handleInputChange("duration", value)}>
+                  <Select
+                    value={formData.duration}
+                    onValueChange={(value) =>
+                      handleInputChange("duration", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
@@ -230,21 +268,30 @@ export default function SubmitInternship() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="positions">Number of Positions</Label>
+                  <Label htmlFor="positions">
+                    Number of Positions (Optional)
+                  </Label>
                   <Input
                     id="positions"
                     type="number"
                     min="1"
                     value={formData.positions}
-                    onChange={(e) => handleInputChange("positions", parseInt(e.target.value) || 1)}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "positions",
+                        parseInt(e.target.value) || 1
+                      )
+                    }
                   />
                 </div>
                 <div>
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">Location (Optional)</Label>
                   <Input
                     id="location"
                     value={formData.location}
-                    onChange={(e) => handleInputChange("location", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("location", e.target.value)
+                    }
                     placeholder="e.g., Remote, NewGiza, Cairo"
                   />
                 </div>
@@ -256,21 +303,25 @@ export default function SubmitInternship() {
                   <Checkbox
                     id="isPaid"
                     checked={formData.isPaid}
-                    onCheckedChange={(checked) => handleInputChange("isPaid", checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("isPaid", checked)
+                    }
                   />
                   <Label htmlFor="isPaid" className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
                     This is a paid internship
                   </Label>
                 </div>
-                
+
                 {formData.isPaid && (
                   <div>
-                    <Label htmlFor="stipend">Stipend Amount</Label>
+                    <Label htmlFor="stipend">Stipend Amount (Optional)</Label>
                     <Input
                       id="stipend"
                       value={formData.stipend}
-                      onChange={(e) => handleInputChange("stipend", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("stipend", e.target.value)
+                      }
                       placeholder="e.g., 3000 EGP/month"
                     />
                   </div>
@@ -280,20 +331,26 @@ export default function SubmitInternship() {
               {/* Dates */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="startDate">Start Date</Label>
+                  <Label htmlFor="startDate">Start Date (Optional)</Label>
                   <Input
                     id="startDate"
                     value={formData.startDate}
-                    onChange={(e) => handleInputChange("startDate", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("startDate", e.target.value)
+                    }
                     placeholder="e.g., January 2025, Immediate"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="applicationDeadline">Application Deadline</Label>
+                  <Label htmlFor="applicationDeadline">
+                    Application Deadline (Optional)
+                  </Label>
                   <Input
                     id="applicationDeadline"
                     value={formData.applicationDeadline}
-                    onChange={(e) => handleInputChange("applicationDeadline", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("applicationDeadline", e.target.value)
+                    }
                     placeholder="e.g., December 31, 2024"
                   />
                 </div>
@@ -309,19 +366,23 @@ export default function SubmitInternship() {
                     id="contactEmail"
                     type="email"
                     value={formData.contactEmail}
-                    onChange={(e) => handleInputChange("contactEmail", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("contactEmail", e.target.value)
+                    }
                     placeholder="applications@company.com"
                     required
                   />
                 </div>
                 <div>
                   <Label htmlFor="contactPhone">
-                    Contact Phone (Visible to Admins Only)
+                    Contact Phone (Optional, Visible to Admins Only)
                   </Label>
                   <Input
                     id="contactPhone"
                     value={formData.contactPhone}
-                    onChange={(e) => handleInputChange("contactPhone", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("contactPhone", e.target.value)
+                    }
                     placeholder="+20 xxx xxx xxxx"
                   />
                 </div>
@@ -331,10 +392,12 @@ export default function SubmitInternship() {
               <div className="flex gap-4 pt-6">
                 <Button
                   type="submit"
-                  disabled={submitMutation.isPending}
+                  disabled={createInternshipMutation.isPending}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {submitMutation.isPending ? "Submitting..." : "Submit for Approval"}
+                  {createInternshipMutation.isPending
+                    ? "Submitting..."
+                    : "Submit for Approval"}
                 </Button>
                 <Button
                   type="button"
@@ -349,10 +412,13 @@ export default function SubmitInternship() {
                 <div className="flex items-start gap-3">
                   <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-blue-900">Approval Process</h4>
+                    <h4 className="font-medium text-blue-900">
+                      Approval Process
+                    </h4>
                     <p className="text-sm text-blue-700 mt-1">
-                      Your internship posting will be reviewed by our admin team before being published. 
-                      You'll be notified once it's approved and live on the platform.
+                      Your internship posting will be reviewed by our admin team
+                      before being published. You'll be notified once it's
+                      approved and live on the platform.
                     </p>
                   </div>
                 </div>

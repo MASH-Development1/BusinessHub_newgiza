@@ -231,7 +231,7 @@ export default function Careers() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Job Title</FormLabel>
+                        <FormLabel>Job Title *</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="e.g., Senior Software Engineer"
@@ -248,7 +248,7 @@ export default function Careers() {
                     name="company"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Company</FormLabel>
+                        <FormLabel>Company *</FormLabel>
                         <FormControl>
                           <Input placeholder="Company name" {...field} />
                         </FormControl>
@@ -262,7 +262,7 @@ export default function Careers() {
                     name="posterRole"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Your Role in Company</FormLabel>
+                        <FormLabel>Your Role in Company *</FormLabel>
                         <FormControl>
                           <SearchableSelect
                             value={field.value}
@@ -286,7 +286,7 @@ export default function Careers() {
                       name="location"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Location</FormLabel>
+                          <FormLabel>Location *</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="e.g., Cairo, Egypt"
@@ -322,7 +322,7 @@ export default function Careers() {
                       name="experienceLevel"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Experience Level</FormLabel>
+                          <FormLabel>Experience Level *</FormLabel>
                           <FormControl>
                             <SearchableSelect
                               value={field.value}
@@ -350,7 +350,7 @@ export default function Careers() {
                       name="industry"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Industry</FormLabel>
+                          <FormLabel>Industry *</FormLabel>
                           <FormControl>
                             <SearchableSelect
                               value={field.value}
@@ -373,7 +373,7 @@ export default function Careers() {
                       name="jobType"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Job Type</FormLabel>
+                          <FormLabel>Job Type *</FormLabel>
                           <FormControl>
                             <SearchableSelect
                               value={field.value}
@@ -399,7 +399,7 @@ export default function Careers() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Job Description</FormLabel>
+                        <FormLabel>Job Description *</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Describe the role, responsibilities, and what you're looking for..."
@@ -477,7 +477,7 @@ export default function Careers() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Contact Phone* (Visible to Admins Only)
+                          Contact Phone * (Visible to Admins Only)
                         </FormLabel>
                         <FormControl>
                           <Input

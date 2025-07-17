@@ -235,6 +235,29 @@ export default function AdminComplete() {
     contactPhone: "",
   });
 
+  // Dialog states for internship management
+  const [selectedInternship, setSelectedInternship] = useState<any>(null);
+  const [isInternshipDetailsOpen, setIsInternshipDetailsOpen] = useState(false);
+  const [isInternshipEditOpen, setIsInternshipEditOpen] = useState(false);
+  const [editInternshipForm, setEditInternshipForm] = useState({
+    title: "",
+    company: "",
+    posterRole: "",
+    description: "",
+    requirements: "",
+    skills: "",
+    department: "",
+    duration: "",
+    isPaid: false,
+    stipend: "",
+    location: "",
+    positions: "",
+    contactEmail: "",
+    contactPhone: "",
+    startDate: "",
+    applicationDeadline: "",
+  });
+
   // Fetch data using Convex hooks
   const { data: stats = {} } = useStats();
   const { data: jobs = [] } = useJobs();
@@ -281,9 +304,25 @@ export default function AdminComplete() {
     usePermanentlyDeleteRemovedInternship();
 
   // Helper functions
-  const formatDate = (dateString: string | Date) => {
-    const date =
-      typeof dateString === "string" ? new Date(dateString) : dateString;
+  const formatDate = (dateString: string | Date | number | undefined) => {
+    if (!dateString) return "N/A";
+
+    let date: Date;
+    if (typeof dateString === "string") {
+      date = new Date(dateString);
+    } else if (typeof dateString === "number") {
+      date = new Date(dateString);
+    } else if (dateString instanceof Date) {
+      date = dateString;
+    } else {
+      return "N/A";
+    }
+
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return "N/A";
+    }
+
     return date.toLocaleDateString();
   };
 
@@ -379,7 +418,7 @@ export default function AdminComplete() {
         application_deadline: internshipForm.applicationDeadline || undefined,
         is_active: true,
         is_approved: true,
-        status: "active",
+        status: "approved",
         sessionId: sessionId || undefined,
       },
       {
@@ -759,6 +798,163 @@ export default function AdminComplete() {
           toast({
             title: "Error",
             description: "Failed to delete job",
+            variant: "destructive",
+          }),
+      });
+    }
+  };
+
+  // Internship management handlers
+  const viewInternshipDetails = (internship: any) => {
+    setSelectedInternship(internship);
+    setIsInternshipDetailsOpen(true);
+  };
+
+  const editInternship = (internship: any) => {
+    setSelectedInternship(internship);
+    setEditInternshipForm({
+      title: internship.title || "",
+      company: internship.company || "",
+      posterRole: internship.posterRole || "",
+      description: internship.description || "",
+      requirements: internship.requirements || "",
+      skills: internship.skills || "",
+      department: internship.department || "",
+      duration: internship.duration || "",
+      isPaid: internship.is_paid || false,
+      stipend: internship.stipend || "",
+      location: internship.location || "",
+      positions: internship.positions ? internship.positions.toString() : "",
+      contactEmail: internship.contactEmail || "",
+      contactPhone: internship.contactPhone || "",
+      startDate: internship.startDate || "",
+      applicationDeadline: internship.applicationDeadline || "",
+    });
+    setIsInternshipEditOpen(true);
+  };
+
+  const handleEditInternshipSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedInternship) return;
+
+    updateInternshipMutation.mutate(
+      {
+        id: selectedInternship.id,
+        title: editInternshipForm.title,
+        company: editInternshipForm.company,
+        poster_role: editInternshipForm.posterRole,
+        description: editInternshipForm.description,
+        requirements: editInternshipForm.requirements || undefined,
+        skills: editInternshipForm.skills || undefined,
+        department: editInternshipForm.department || undefined,
+        duration: editInternshipForm.duration,
+        is_paid: editInternshipForm.isPaid,
+        stipend: editInternshipForm.stipend || undefined,
+        location: editInternshipForm.location || undefined,
+        positions: editInternshipForm.positions
+          ? parseInt(editInternshipForm.positions)
+          : undefined,
+        contact_email: editInternshipForm.contactEmail,
+        contact_phone: editInternshipForm.contactPhone || undefined,
+        start_date: editInternshipForm.startDate || undefined,
+        application_deadline:
+          editInternshipForm.applicationDeadline || undefined,
+      },
+      {
+        onSuccess: () => {
+          setIsInternshipEditOpen(false);
+          setSelectedInternship(null);
+          setEditInternshipForm({
+            title: "",
+            company: "",
+            posterRole: "",
+            description: "",
+            requirements: "",
+            skills: "",
+            department: "",
+            duration: "",
+            isPaid: false,
+            stipend: "",
+            location: "",
+            positions: "",
+            contactEmail: "",
+            contactPhone: "",
+            startDate: "",
+            applicationDeadline: "",
+          });
+          toast({
+            title: "Success",
+            description: "Internship updated successfully!",
+          });
+        },
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to update internship",
+            variant: "destructive",
+          }),
+      }
+    );
+  };
+
+  const approveInternship = (internshipId: string) => {
+    updateInternshipMutation.mutate(
+      {
+        id: internshipId as any,
+        is_approved: true,
+        status: "approved",
+      },
+      {
+        onSuccess: () =>
+          toast({
+            title: "Success",
+            description: "Internship approved successfully!",
+          }),
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to approve internship",
+            variant: "destructive",
+          }),
+      }
+    );
+  };
+
+  const rejectInternship = (internshipId: string) => {
+    updateInternshipMutation.mutate(
+      {
+        id: internshipId as any,
+        is_approved: false,
+        status: "rejected",
+      },
+      {
+        onSuccess: () =>
+          toast({
+            title: "Success",
+            description: "Internship rejected successfully!",
+          }),
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to reject internship",
+            variant: "destructive",
+          }),
+      }
+    );
+  };
+
+  const deleteInternship = (internshipId: string) => {
+    if (window.confirm("Are you sure you want to delete this internship?")) {
+      deleteInternshipMutation.mutate(internshipId as any, {
+        onSuccess: () =>
+          toast({
+            title: "Success",
+            description: "Internship deleted successfully!",
+          }),
+        onError: () =>
+          toast({
+            title: "Error",
+            description: "Failed to delete internship",
             variant: "destructive",
           }),
       });
@@ -1170,17 +1366,37 @@ export default function AdminComplete() {
                                 </p>
                               )}
                             </div>
-                            <div className="flex gap-2 ml-4">
-                              <Button
-                                onClick={() => viewJobDetails(job)}
-                                size="sm"
-                                variant="outline"
-                                className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                            <div className="flex flex-col gap-2 ml-4 min-w-fit">
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => viewJobDetails(job)}
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {job.status === "approved" && (
+                                  <Button
+                                    onClick={() => editJob(job)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-orange-300 text-orange-700 hover:bg-orange-50 bg-white"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  onClick={() => deleteJob(job.id)}
+                                  size="sm"
+                                  variant="destructive"
+                                  className="bg-red-600 hover:bg-red-700 text-white border-0"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                               {job.status === "pending" && (
-                                <>
+                                <div className="flex gap-2">
                                   <Button
                                     onClick={() => editJob(job)}
                                     size="sm"
@@ -1204,26 +1420,8 @@ export default function AdminComplete() {
                                   >
                                     <X className="h-4 w-4" />
                                   </Button>
-                                </>
+                                </div>
                               )}
-                              {job.status === "approved" && (
-                                <Button
-                                  onClick={() => editJob(job)}
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-orange-300 text-orange-700 hover:bg-orange-50 bg-white"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button
-                                onClick={() => deleteJob(job.id)}
-                                size="sm"
-                                variant="destructive"
-                                className="bg-red-600 hover:bg-red-700 text-white border-0"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
                             </div>
                           </div>
                         </div>
@@ -1237,172 +1435,183 @@ export default function AdminComplete() {
 
           {/* Internships Tab */}
           <TabsContent value="internships" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  Manage Internships
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="mb-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add New Internship
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Add New Internship</DialogTitle>
-                    </DialogHeader>
-                    <form
-                      onSubmit={handleInternshipSubmit}
-                      className="space-y-6"
-                    >
-                      {/* Basic Information */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Label
-                            htmlFor="internship-title"
-                            className="mb-3 block"
-                          >
-                            Internship Title *
-                          </Label>
-                          <Input
-                            id="internship-title"
-                            value={internshipForm.title}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                title: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., Software Development Intern"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label
-                            htmlFor="internship-company"
-                            className="mb-3 block"
-                          >
-                            Company *
-                          </Label>
-                          <Input
-                            id="internship-company"
-                            value={internshipForm.company}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                company: e.target.value,
-                              })
-                            }
-                            placeholder="Company name"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Label
-                            htmlFor="internship-poster-role"
-                            className="mb-3 block"
-                          >
-                            Your Role *
-                          </Label>
-                          <SearchableSelect
-                            value={internshipForm.posterRole}
-                            onValueChange={(value) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                posterRole: value,
-                              })
-                            }
-                            options={roles.map((role) => ({
-                              value: role,
-                              label: role,
-                            }))}
-                            placeholder="Select your role"
-                            searchPlaceholder="Search roles..."
-                          />
-                        </div>
-                        <div>
-                          <Label
-                            htmlFor="internship-department"
-                            className="mb-3 block"
-                          >
-                            Industry
-                          </Label>
-                          <Input
-                            id="internship-department"
-                            value={internshipForm.department}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                department: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., Engineering, Marketing"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Description */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Create Internship Form */}
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-gray-900 dark:text-white">
+                    Create New Internship
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <form onSubmit={handleInternshipSubmit} className="space-y-4">
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Internship Title *
+                      </Label>
+                      <Input
+                        value={internshipForm.title}
+                        onChange={(e) =>
+                          setInternshipForm({
+                            ...internshipForm,
+                            title: e.target.value,
+                          })
+                        }
+                        placeholder="e.g., Software Development Intern"
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Company *
+                      </Label>
+                      <Input
+                        value={internshipForm.company}
+                        onChange={(e) =>
+                          setInternshipForm({
+                            ...internshipForm,
+                            company: e.target.value,
+                          })
+                        }
+                        placeholder="Company name"
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Your Role in Company *
+                      </Label>
+                      <SearchableSelect
+                        value={internshipForm.posterRole}
+                        onValueChange={(value) =>
+                          setInternshipForm({
+                            ...internshipForm,
+                            posterRole: value,
+                          })
+                        }
+                        options={roles.map((role) => ({
+                          value: role,
+                          label: role,
+                        }))}
+                        placeholder="Select your role"
+                        searchPlaceholder="Search roles..."
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Internship Description *
+                      </Label>
+                      <Textarea
+                        value={internshipForm.description}
+                        onChange={(e) =>
+                          setInternshipForm({
+                            ...internshipForm,
+                            description: e.target.value,
+                          })
+                        }
+                        placeholder="Describe the internship role, responsibilities, and what the intern will learn..."
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        rows={3}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-gray-700 dark:text-gray-300">
+                        Requirements (Optional)
+                      </Label>
+                      <Textarea
+                        value={internshipForm.requirements}
+                        onChange={(e) =>
+                          setInternshipForm({
+                            ...internshipForm,
+                            requirements: e.target.value,
+                          })
+                        }
+                        placeholder="Education level, skills, experience required..."
+                        className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        rows={2}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label
-                          htmlFor="internship-description"
-                          className="mb-3 block"
-                        >
-                          Description *
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Department/Industry (Optional)
                         </Label>
-                        <Textarea
-                          id="internship-description"
-                          rows={4}
-                          value={internshipForm.description}
+                        <Input
+                          value={internshipForm.department}
                           onChange={(e) =>
                             setInternshipForm({
                               ...internshipForm,
-                              description: e.target.value,
+                              department: e.target.value,
                             })
                           }
-                          placeholder="Describe the internship role, responsibilities, and what the intern will learn..."
+                          placeholder="e.g., Engineering, Marketing"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Location (Optional)
+                        </Label>
+                        <Input
+                          value={internshipForm.location}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              location: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., Cairo, Egypt or Remote"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Duration *
+                        </Label>
+                        <Input
+                          value={internshipForm.duration}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              duration: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., 3 months, Summer 2025"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                           required
                         />
                       </div>
-
                       <div>
-                        <Label
-                          htmlFor="internship-requirements"
-                          className="mb-3 block"
-                        >
-                          Requirements
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Number of Positions (Optional)
                         </Label>
-                        <Textarea
-                          id="internship-requirements"
-                          rows={3}
-                          value={internshipForm.requirements}
+                        <Input
+                          type="number"
+                          min="1"
+                          value={internshipForm.positions}
                           onChange={(e) =>
                             setInternshipForm({
                               ...internshipForm,
-                              requirements: e.target.value,
+                              positions: e.target.value,
                             })
                           }
-                          placeholder="Education level, skills, experience required..."
+                          placeholder="e.g., 2"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                         />
                       </div>
-
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label
-                          htmlFor="internship-skills"
-                          className="mb-3 block"
-                        >
-                          Required Skills
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Required Skills (Optional)
                         </Label>
-                        <Textarea
-                          id="internship-skills"
-                          rows={2}
+                        <Input
                           value={internshipForm.skills}
                           onChange={(e) =>
                             setInternshipForm({
@@ -1410,269 +1619,279 @@ export default function AdminComplete() {
                               skills: e.target.value,
                             })
                           }
-                          placeholder="List key skills needed for this role..."
+                          placeholder="e.g., JavaScript, React, Node.js"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                         />
                       </div>
-
-                      {/* Internship Details */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
-                          <Label
-                            htmlFor="internship-duration"
-                            className="mb-3 block"
-                          >
-                            Duration *
-                          </Label>
-                          <Input
-                            id="internship-duration"
-                            value={internshipForm.duration}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                duration: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., 3 months, Summer 2025"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label
-                            htmlFor="internship-positions"
-                            className="mb-3 block"
-                          >
-                            Number of Positions
-                          </Label>
-                          <Input
-                            id="internship-positions"
-                            type="number"
-                            min="1"
-                            value={internshipForm.positions}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                positions: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., 2"
-                          />
-                        </div>
-                        <div>
-                          <Label
-                            htmlFor="internship-location"
-                            className="mb-3 block"
-                          >
-                            Location
-                          </Label>
-                          <Input
-                            id="internship-location"
-                            value={internshipForm.location}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                location: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., Cairo, Egypt or Remote"
-                          />
-                        </div>
+                      <div>
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Start Date (Optional)
+                        </Label>
+                        <Input
+                          value={internshipForm.startDate}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              startDate: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., January 2025, Immediate"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
                       </div>
-
-                      {/* Compensation */}
-                      <div className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                          <input
-                            id="internship-is-paid"
-                            type="checkbox"
-                            checked={internshipForm.isPaid}
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={internshipForm.isPaid}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              isPaid: e.target.checked,
+                            })
+                          }
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          This is a paid internship
+                        </Label>
+                      </div>
+                      {internshipForm.isPaid && (
+                        <div>
+                          <Label className="text-gray-700 dark:text-gray-300">
+                            Stipend Amount (Optional)
+                          </Label>
+                          <Input
+                            value={internshipForm.stipend}
                             onChange={(e) =>
                               setInternshipForm({
                                 ...internshipForm,
-                                isPaid: e.target.checked,
+                                stipend: e.target.value,
                               })
                             }
-                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            placeholder="e.g., 3,000 EGP/month"
+                            className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
                           />
-                          <Label
-                            htmlFor="internship-is-paid"
-                            className="flex items-center gap-2"
-                          >
-                            This is a paid internship
-                          </Label>
                         </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Contact Email *
+                        </Label>
+                        <Input
+                          type="email"
+                          value={internshipForm.contactEmail}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              contactEmail: e.target.value,
+                            })
+                          }
+                          placeholder="hr@company.com"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-gray-700 dark:text-gray-300">
+                          Contact Phone
+                        </Label>
+                        <Input
+                          type="tel"
+                          value={internshipForm.contactPhone}
+                          onChange={(e) =>
+                            setInternshipForm({
+                              ...internshipForm,
+                              contactPhone: e.target.value,
+                            })
+                          }
+                          placeholder="+20 10 1234 5678"
+                          className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      disabled={createInternshipMutation.isPending}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {createInternshipMutation.isPending
+                        ? "Creating..."
+                        : "Create Internship"}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
 
-                        {internshipForm.isPaid && (
-                          <div>
-                            <Label
-                              htmlFor="internship-stipend"
-                              className="mb-3 block"
-                            >
-                              Stipend Amount
-                            </Label>
-                            <Input
-                              id="internship-stipend"
-                              value={internshipForm.stipend}
-                              onChange={(e) =>
-                                setInternshipForm({
-                                  ...internshipForm,
-                                  stipend: e.target.value,
-                                })
-                              }
-                              placeholder="e.g., 3,000 EGP/month"
-                            />
+              {/* Internship List */}
+              <Card className="bg-white border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-gray-900">
+                    All Internships ({internships.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4 h-[840px] overflow-y-auto">
+                    {internships.length === 0 ? (
+                      <div className="text-center py-8">
+                        <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500">
+                          No internships created yet
+                        </p>
+                      </div>
+                    ) : (
+                      internships.map((internship) => (
+                        <div
+                          key={internship.id}
+                          className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900">
+                                {internship.title}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                {internship.company}
+                              </p>
+                              <div className="flex gap-2 mt-2">
+                                <Badge
+                                  variant={
+                                    internship.status === "approved"
+                                      ? "default"
+                                      : internship.status === "rejected"
+                                        ? "destructive"
+                                        : "secondary"
+                                  }
+                                  className={
+                                    internship.status === "approved"
+                                      ? "bg-green-100 text-green-800 border-green-300"
+                                      : internship.status === "rejected"
+                                        ? "bg-red-100 text-red-800 border-red-300"
+                                        : "bg-yellow-100 text-yellow-800 border-yellow-300"
+                                  }
+                                >
+                                  {internship.status === "approved"
+                                    ? "Approved"
+                                    : internship.status === "rejected"
+                                      ? "Rejected"
+                                      : "Pending"}
+                                </Badge>
+                                {internship.department && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-blue-700 border-blue-300 bg-blue-50"
+                                  >
+                                    {internship.department}
+                                  </Badge>
+                                )}
+                                {internship.location && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-purple-700 border-purple-300 bg-purple-50"
+                                  >
+                                    {internship.location}
+                                  </Badge>
+                                )}
+                                {internship.duration && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-green-700 border-green-300 bg-green-50"
+                                  >
+                                    {internship.duration}
+                                  </Badge>
+                                )}
+                                {internship.isPaid && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-orange-700 border-orange-300 bg-orange-50"
+                                  >
+                                    Paid
+                                  </Badge>
+                                )}
+                              </div>
+                              {internship.description && (
+                                <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                                  {internship.description.substring(0, 100)}...
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2 ml-4 min-w-fit">
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() =>
+                                    viewInternshipDetails(internship)
+                                  }
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-blue-300 text-blue-700 hover:bg-blue-50 bg-white"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {internship.status === "approved" && (
+                                  <Button
+                                    onClick={() => editInternship(internship)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-orange-300 text-orange-700 hover:bg-orange-50 bg-white"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  onClick={() =>
+                                    deleteInternship(internship.id)
+                                  }
+                                  size="sm"
+                                  variant="destructive"
+                                  className="bg-red-600 hover:bg-red-700 text-white border-0"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              {internship.status === "pending" && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => editInternship(internship)}
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-orange-300 text-orange-700 hover:bg-orange-50 bg-white"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      approveInternship(internship.id)
+                                    }
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white border-0"
+                                  >
+                                    <Check className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      rejectInternship(internship.id)
+                                    }
+                                    size="sm"
+                                    variant="destructive"
+                                    className="bg-red-600 hover:bg-red-700 text-white border-0"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Dates */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Label
-                            htmlFor="internship-start-date"
-                            className="mb-3 block"
-                          >
-                            Start Date
-                          </Label>
-                          <Input
-                            id="internship-start-date"
-                            value={internshipForm.startDate}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                startDate: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., January 2025, Immediate"
-                          />
                         </div>
-                        <div>
-                          <Label
-                            htmlFor="internship-deadline"
-                            className="mb-3 block"
-                          >
-                            Application Deadline
-                          </Label>
-                          <Input
-                            id="internship-deadline"
-                            value={internshipForm.applicationDeadline}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                applicationDeadline: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., December 31, 2024"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Contact Information */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Label
-                            htmlFor="internship-contact-email"
-                            className="mb-3 block"
-                          >
-                            Contact Email* (Visible to Admins Only)
-                          </Label>
-                          <Input
-                            id="internship-contact-email"
-                            type="email"
-                            value={internshipForm.contactEmail}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                contactEmail: e.target.value,
-                              })
-                            }
-                            placeholder="hr@company.com"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label
-                            htmlFor="internship-contact-phone"
-                            className="mb-3 block"
-                          >
-                            Contact Phone (Visible to Admins Only)
-                          </Label>
-                          <Input
-                            id="internship-contact-phone"
-                            type="tel"
-                            value={internshipForm.contactPhone}
-                            onChange={(e) =>
-                              setInternshipForm({
-                                ...internshipForm,
-                                contactPhone: e.target.value,
-                              })
-                            }
-                            placeholder="+20 10 1234 5678"
-                          />
-                        </div>
-                      </div>
-
-                      <Button
-                        type="submit"
-                        disabled={createInternshipMutation.isPending}
-                      >
-                        {createInternshipMutation.isPending
-                          ? "Creating..."
-                          : "Create Internship"}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-
-                <div className="space-y-4">
-                  {internships.map((internship) => (
-                    <Card key={internship.id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold">
-                              {internship.title}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {internship.company}
-                            </p>
-                            <p className="text-sm">{internship.department}</p>
-                            <Badge variant={getStatusBadge(internship.status)}>
-                              {internship.status}
-                            </Badge>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                deleteInternshipMutation.mutate(internship.id, {
-                                  onSuccess: () =>
-                                    toast({
-                                      title: "Success",
-                                      description:
-                                        "Internship deleted successfully!",
-                                    }),
-                                  onError: () =>
-                                    toast({
-                                      title: "Error",
-                                      description:
-                                        "Failed to delete internship",
-                                      variant: "destructive",
-                                    }),
-                                })
-                              }
-                              disabled={deleteInternshipMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Courses Tab */}
@@ -3021,6 +3240,694 @@ export default function AdminComplete() {
                   type="button"
                   variant="outline"
                   onClick={() => setIsJobEditOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Internship Details Dialog */}
+        <Dialog
+          open={isInternshipDetailsOpen}
+          onOpenChange={setIsInternshipDetailsOpen}
+        >
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                Internship Review: {selectedInternship?.title}
+              </DialogTitle>
+            </DialogHeader>
+            {selectedInternship && (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column - Internship Information */}
+                <div className="lg:col-span-2">
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <GraduationCap className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        Internship Information
+                      </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Internship Title
+                          </span>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {selectedInternship.title}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Company
+                          </span>
+                          <p className="text-gray-900 dark:text-white font-medium">
+                            {selectedInternship.company}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Department
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedInternship.department || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Duration
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedInternship.duration || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Location
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedInternship.location || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Number of Positions
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedInternship.positions || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Compensation
+                          </span>
+                          <p className="text-gray-900 dark:text-white">
+                            {selectedInternship.is_paid
+                              ? selectedInternship.stipend
+                                ? `Paid - ${selectedInternship.stipend}`
+                                : "Paid"
+                              : "Unpaid"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Status
+                          </span>
+                          <Badge
+                            variant={
+                              selectedInternship.status === "approved"
+                                ? "default"
+                                : selectedInternship.status === "rejected"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                            className={
+                              selectedInternship.status === "approved"
+                                ? "bg-green-100 text-green-800 border-green-300"
+                                : selectedInternship.status === "rejected"
+                                  ? "bg-red-100 text-red-800 border-red-300"
+                                  : "bg-yellow-100 text-yellow-800 border-yellow-300"
+                            }
+                          >
+                            {selectedInternship.status === "approved"
+                              ? "Approved"
+                              : selectedInternship.status === "rejected"
+                                ? "Rejected"
+                                : "Pending"}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Internship Description
+                        </span>
+                        <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-700 rounded border">
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                            {selectedInternship.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {selectedInternship.requirements && (
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Requirements
+                          </span>
+                          <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-700 rounded border">
+                            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                              {selectedInternship.requirements}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedInternship.skills && (
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Required Skills
+                          </span>
+                          <div className="mt-1 p-3 bg-gray-50 dark:bg-gray-700 rounded border">
+                            <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                              {selectedInternship.skills}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Contact Email
+                          </span>
+                          <p className="text-blue-600 dark:text-blue-400 text-sm">
+                            {selectedInternship.contactEmail || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Contact Phone
+                          </span>
+                          <p className="text-gray-900 dark:text-white text-sm">
+                            {selectedInternship.contactPhone || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {(selectedInternship.start_date ||
+                        selectedInternship.application_deadline) && (
+                        <div className="grid grid-cols-2 gap-4">
+                          {selectedInternship.start_date && (
+                            <div>
+                              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Start Date
+                              </span>
+                              <p className="text-gray-900 dark:text-white text-sm">
+                                {selectedInternship.start_date}
+                              </p>
+                            </div>
+                          )}
+                          {selectedInternship.application_deadline && (
+                            <div>
+                              <span className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Application Deadline
+                              </span>
+                              <p className="text-gray-900 dark:text-white text-sm">
+                                {selectedInternship.application_deadline}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column - Internship Poster Information & Timeline */}
+                <div className="space-y-6">
+                  {/* Internship Poster Information Card */}
+                  <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                        Internship Poster Information
+                      </h3>
+                    </div>
+
+                    {selectedInternship.posterEmail ? (
+                      <div className="space-y-3">
+                        <div>
+                          <span className="block text-xs text-blue-700 dark:text-blue-300">
+                            Posted by:
+                          </span>
+                          <p className="text-blue-900 dark:text-blue-100 text-sm font-medium">
+                            {selectedInternship.posterEmail}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="block text-xs text-blue-700 dark:text-blue-300">
+                            Role:
+                          </span>
+                          <p className="text-blue-900 dark:text-blue-100 text-sm">
+                            {selectedInternship.posterRole || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4">
+                        <p className="text-blue-700 dark:text-blue-300 text-sm">
+                          No poster information available
+                        </p>
+                        <p className="text-blue-600 dark:text-blue-400 text-xs">
+                          Internship created by admin
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Timeline Card */}
+                  <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <h3 className="text-sm font-semibold text-green-900 dark:text-green-100">
+                        Timeline
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <span className="block text-xs text-green-700 dark:text-green-300">
+                          Posted Date:
+                        </span>
+                        <p className="text-green-900 dark:text-green-100 text-sm font-medium">
+                          {formatDate(selectedInternship.createdAt)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-green-700 dark:text-green-300">
+                          Last Updated:
+                        </span>
+                        <p className="text-green-900 dark:text-green-100 text-sm font-medium">
+                          {formatDate(selectedInternship.updatedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
+                    {selectedInternship.status === "pending" && (
+                      <Button
+                        onClick={() => {
+                          approveInternship(selectedInternship.id);
+                          setIsInternshipDetailsOpen(false);
+                        }}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Approve Internship
+                      </Button>
+                    )}
+                    {selectedInternship.status === "pending" && (
+                      <Button
+                        onClick={() => {
+                          rejectInternship(selectedInternship.id);
+                          setIsInternshipDetailsOpen(false);
+                        }}
+                        className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Reject Internship
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => {
+                        setIsInternshipDetailsOpen(false);
+                        editInternship(selectedInternship);
+                      }}
+                      className="w-full"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Internship
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        deleteInternship(selectedInternship.id);
+                        setIsInternshipDetailsOpen(false);
+                      }}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Internship
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsInternshipDetailsOpen(false)}
+                      className="w-full"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Internship Dialog */}
+        <Dialog
+          open={isInternshipEditOpen}
+          onOpenChange={setIsInternshipEditOpen}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Internship</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditInternshipSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-internship-title" className="mb-3 block">
+                  Internship Title *
+                </Label>
+                <Input
+                  id="edit-internship-title"
+                  value={editInternshipForm.title}
+                  onChange={(e) =>
+                    setEditInternshipForm({
+                      ...editInternshipForm,
+                      title: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., Software Development Intern"
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-internship-company" className="mb-3 block">
+                  Company *
+                </Label>
+                <Input
+                  id="edit-internship-company"
+                  value={editInternshipForm.company}
+                  onChange={(e) =>
+                    setEditInternshipForm({
+                      ...editInternshipForm,
+                      company: e.target.value,
+                    })
+                  }
+                  placeholder="Company name"
+                  required
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="edit-internship-poster-role"
+                  className="mb-3 block"
+                >
+                  Your Role in Company *
+                </Label>
+                <SearchableSelect
+                  value={editInternshipForm.posterRole}
+                  onValueChange={(value) =>
+                    setEditInternshipForm({
+                      ...editInternshipForm,
+                      posterRole: value,
+                    })
+                  }
+                  options={roles.map((role) => ({
+                    value: role,
+                    label: role,
+                  }))}
+                  placeholder="Select your role"
+                  searchPlaceholder="Search roles..."
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="edit-internship-description"
+                  className="mb-3 block"
+                >
+                  Internship Description *
+                </Label>
+                <Textarea
+                  id="edit-internship-description"
+                  value={editInternshipForm.description}
+                  onChange={(e) =>
+                    setEditInternshipForm({
+                      ...editInternshipForm,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Describe the internship role, responsibilities, and what the intern will learn..."
+                  rows={4}
+                  required
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor="edit-internship-requirements"
+                  className="mb-3 block"
+                >
+                  Requirements (Optional)
+                </Label>
+                <Textarea
+                  id="edit-internship-requirements"
+                  value={editInternshipForm.requirements}
+                  onChange={(e) =>
+                    setEditInternshipForm({
+                      ...editInternshipForm,
+                      requirements: e.target.value,
+                    })
+                  }
+                  placeholder="Education level, skills, experience required..."
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label
+                    htmlFor="edit-internship-department"
+                    className="mb-3 block"
+                  >
+                    Department/Industry
+                  </Label>
+                  <Input
+                    id="edit-internship-department"
+                    value={editInternshipForm.department}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        department: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., Engineering, Marketing"
+                  />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="edit-internship-location"
+                    className="mb-3 block"
+                  >
+                    Location
+                  </Label>
+                  <Input
+                    id="edit-internship-location"
+                    value={editInternshipForm.location}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        location: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., Cairo, Egypt or Remote"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label
+                    htmlFor="edit-internship-duration"
+                    className="mb-3 block"
+                  >
+                    Duration *
+                  </Label>
+                  <Input
+                    id="edit-internship-duration"
+                    value={editInternshipForm.duration}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        duration: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., 3 months, Summer 2025"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="edit-internship-positions"
+                    className="mb-3 block"
+                  >
+                    Number of Positions
+                  </Label>
+                  <Input
+                    id="edit-internship-positions"
+                    type="number"
+                    min="1"
+                    value={editInternshipForm.positions}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        positions: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., 2"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="edit-internship-skills" className="mb-3 block">
+                  Required Skills
+                </Label>
+                <Input
+                  id="edit-internship-skills"
+                  value={editInternshipForm.skills}
+                  onChange={(e) =>
+                    setEditInternshipForm({
+                      ...editInternshipForm,
+                      skills: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., JavaScript, React, Node.js"
+                />
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={editInternshipForm.isPaid}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        isPaid: e.target.checked,
+                      })
+                    }
+                    className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  />
+                  <Label>This is a paid internship</Label>
+                </div>
+                {editInternshipForm.isPaid && (
+                  <div>
+                    <Label
+                      htmlFor="edit-internship-stipend"
+                      className="mb-3 block"
+                    >
+                      Stipend Amount
+                    </Label>
+                    <Input
+                      id="edit-internship-stipend"
+                      value={editInternshipForm.stipend}
+                      onChange={(e) =>
+                        setEditInternshipForm({
+                          ...editInternshipForm,
+                          stipend: e.target.value,
+                        })
+                      }
+                      placeholder="e.g., 3,000 EGP/month"
+                    />
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label
+                    htmlFor="edit-internship-start-date"
+                    className="mb-3 block"
+                  >
+                    Start Date
+                  </Label>
+                  <Input
+                    id="edit-internship-start-date"
+                    value={editInternshipForm.startDate}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        startDate: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., January 2025, Immediate"
+                  />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="edit-internship-deadline"
+                    className="mb-3 block"
+                  >
+                    Application Deadline
+                  </Label>
+                  <Input
+                    id="edit-internship-deadline"
+                    value={editInternshipForm.applicationDeadline}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        applicationDeadline: e.target.value,
+                      })
+                    }
+                    placeholder="e.g., December 31, 2024"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label
+                    htmlFor="edit-internship-contact-email"
+                    className="mb-3 block"
+                  >
+                    Contact Email *
+                  </Label>
+                  <Input
+                    id="edit-internship-contact-email"
+                    type="email"
+                    value={editInternshipForm.contactEmail}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        contactEmail: e.target.value,
+                      })
+                    }
+                    placeholder="hr@company.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label
+                    htmlFor="edit-internship-contact-phone"
+                    className="mb-3 block"
+                  >
+                    Contact Phone
+                  </Label>
+                  <Input
+                    id="edit-internship-contact-phone"
+                    type="tel"
+                    value={editInternshipForm.contactPhone}
+                    onChange={(e) =>
+                      setEditInternshipForm({
+                        ...editInternshipForm,
+                        contactPhone: e.target.value,
+                      })
+                    }
+                    placeholder="+20 10 1234 5678"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="submit"
+                  disabled={updateInternshipMutation.isPending}
+                >
+                  {updateInternshipMutation.isPending
+                    ? "Updating..."
+                    : "Update Internship"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsInternshipEditOpen(false)}
                 >
                   Cancel
                 </Button>
