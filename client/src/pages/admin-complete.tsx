@@ -1022,7 +1022,11 @@ export default function AdminComplete() {
                     Access Requests
                   </p>
                   <p className="text-2xl font-bold text-primary">
-                    {accessRequests.length}
+                    {
+                      accessRequests.filter(
+                        (request) => request.status === "pending"
+                      ).length
+                    }
                   </p>
                 </div>
                 <UserCheck className="h-8 w-8 text-primary" />
@@ -2411,69 +2415,77 @@ export default function AdminComplete() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {accessRequests.map((request) => (
-                    <Card key={request.id}>
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold">
-                              {request.fullName}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {request.email}
-                            </p>
-                            <p className="text-sm">
-                              Unit: {request.unitNumber}
-                            </p>
-                            {request.mobile && (
-                              <p className="text-sm">
-                                Mobile: {request.mobile}
+                  {accessRequests
+                    .filter((request) => request.status === "pending")
+                    .map((request) => (
+                      <Card key={request.id}>
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-semibold">
+                                {request.fullName}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {request.email}
                               </p>
-                            )}
-                            <Badge variant={getStatusBadge(request.status)}>
-                              {request.status}
-                            </Badge>
+                              <p className="text-sm">
+                                Unit: {request.unitNumber}
+                              </p>
+                              {request.mobile && (
+                                <p className="text-sm">
+                                  Mobile: {request.mobile}
+                                </p>
+                              )}
+                              <Badge variant={getStatusBadge(request.status)}>
+                                {request.status}
+                              </Badge>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleAccessRequestStatusUpdate(
+                                    request.id.toString(),
+                                    "approved"
+                                  )
+                                }
+                                disabled={
+                                  updateAccessRequestStatusMutation.isPending
+                                }
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  handleAccessRequestStatusUpdate(
+                                    request.id.toString(),
+                                    "rejected"
+                                  )
+                                }
+                                disabled={
+                                  updateAccessRequestStatusMutation.isPending
+                                }
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            {request.status === "pending" && (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleAccessRequestStatusUpdate(
-                                      request.id.toString(),
-                                      "approved"
-                                    )
-                                  }
-                                  disabled={
-                                    updateAccessRequestStatusMutation.isPending
-                                  }
-                                >
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    handleAccessRequestStatusUpdate(
-                                      request.id.toString(),
-                                      "rejected"
-                                    )
-                                  }
-                                  disabled={
-                                    updateAccessRequestStatusMutation.isPending
-                                  }
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  {accessRequests.filter(
+                    (request) => request.status === "pending"
+                  ).length === 0 && (
+                    <div className="text-center py-8">
+                      <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">
+                        No pending access requests
+                      </p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
