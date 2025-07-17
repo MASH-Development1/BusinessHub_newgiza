@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Building2, Search } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -30,7 +32,6 @@ import {
   useCourses,
   useApplications,
   useProfiles,
-  useCvShowcase,
   useCommunityBenefits,
   useStats,
   useCreateJob,
@@ -59,6 +60,8 @@ import {
   useRestoreRemovedInternship,
   usePermanentlyDeleteRemovedJob,
   usePermanentlyDeleteRemovedInternship,
+  useMatchingCVsForJob,
+  useMatchingJobsForCV,
 } from "@/lib/convexApi";
 import {
   Job,
@@ -93,9 +96,6 @@ import {
   UserCheck,
   User,
   Pencil,
-  Building,
-  Download,
-  Calendar,
 } from "lucide-react";
 
 const industries = [
@@ -269,7 +269,6 @@ export default function AdminComplete() {
   const { data: courses = [] } = useCourses();
   const { data: applications = [] } = useApplications();
   const { data: profiles = [] } = useProfiles();
-  const { data: cvShowcase = [] } = useCvShowcase();
   const { data: benefits = [] } = useCommunityBenefits();
   const { data: whitelist = [] } = useWhitelist();
   const { data: accessRequests = [] } = useAccessRequests();
@@ -966,6 +965,14 @@ export default function AdminComplete() {
     }
   };
 
+  // State for CV-Job Match tab
+  const [selectedJobId, setSelectedJobId] = useState<string>("");
+  const [selectedCvId, setSelectedCvId] = useState<string>("");
+
+  // Use Convex hooks for matching
+  const { data: jobMatches = [], isLoading: isLoadingJobMatches } = useMatchingCVsForJob(selectedJobId || null);
+  const { data: cvMatches = [], isLoading: isLoadingCvMatches } = useMatchingJobsForCV(selectedCvId || null);
+
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -1027,11 +1034,7 @@ export default function AdminComplete() {
                     Access Requests
                   </p>
                   <p className="text-2xl font-bold text-primary">
-                    {
-                      accessRequests.filter(
-                        (request) => request.status === "pending"
-                      ).length
-                    }
+                    {accessRequests.length}
                   </p>
                 </div>
                 <UserCheck className="h-8 w-8 text-primary" />
@@ -1042,18 +1045,15 @@ export default function AdminComplete() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="jobs" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-12">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="jobs">Jobs</TabsTrigger>
             <TabsTrigger value="internships">Internships</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
             <TabsTrigger value="benefits">Benefits</TabsTrigger>
-            <TabsTrigger value="applications">Applications</TabsTrigger>
-            <TabsTrigger value="cvs">CVs</TabsTrigger>
-            <TabsTrigger value="directory">Directory</TabsTrigger>
             <TabsTrigger value="whitelist">Whitelist</TabsTrigger>
             <TabsTrigger value="requests">Access Requests</TabsTrigger>
             <TabsTrigger value="removed">Removed Items</TabsTrigger>
-            <TabsTrigger value="backup">Backup</TabsTrigger>
+            <TabsTrigger value="cv-job-match">CV-Job Match</TabsTrigger>
           </TabsList>
 
           {/* Jobs Tab */}
@@ -2424,77 +2424,69 @@ export default function AdminComplete() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {accessRequests
-                    .filter((request) => request.status === "pending")
-                    .map((request) => (
-                      <Card key={request.id}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-semibold">
-                                {request.fullName}
-                              </h3>
-                              <p className="text-sm text-muted-foreground">
-                                {request.email}
-                              </p>
+                  {accessRequests.map((request) => (
+                    <Card key={request.id}>
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-semibold">
+                              {request.fullName}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {request.email}
+                            </p>
+                            <p className="text-sm">
+                              Unit: {request.unitNumber}
+                            </p>
+                            {request.mobile && (
                               <p className="text-sm">
-                                Unit: {request.unitNumber}
+                                Mobile: {request.mobile}
                               </p>
-                              {request.mobile && (
-                                <p className="text-sm">
-                                  Mobile: {request.mobile}
-                                </p>
-                              )}
-                              <Badge variant={getStatusBadge(request.status)}>
-                                {request.status}
-                              </Badge>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleAccessRequestStatusUpdate(
-                                    request.id.toString(),
-                                    "approved"
-                                  )
-                                }
-                                disabled={
-                                  updateAccessRequestStatusMutation.isPending
-                                }
-                              >
-                                <Check className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  handleAccessRequestStatusUpdate(
-                                    request.id.toString(),
-                                    "rejected"
-                                  )
-                                }
-                                disabled={
-                                  updateAccessRequestStatusMutation.isPending
-                                }
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
+                            )}
+                            <Badge variant={getStatusBadge(request.status)}>
+                              {request.status}
+                            </Badge>
                           </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  {accessRequests.filter(
-                    (request) => request.status === "pending"
-                  ).length === 0 && (
-                    <div className="text-center py-8">
-                      <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">
-                        No pending access requests
-                      </p>
-                    </div>
-                  )}
+                          <div className="flex gap-2">
+                            {request.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleAccessRequestStatusUpdate(
+                                      request.id.toString(),
+                                      "approved"
+                                    )
+                                  }
+                                  disabled={
+                                    updateAccessRequestStatusMutation.isPending
+                                  }
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    handleAccessRequestStatusUpdate(
+                                      request.id.toString(),
+                                      "rejected"
+                                    )
+                                  }
+                                  disabled={
+                                    updateAccessRequestStatusMutation.isPending
+                                  }
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -2729,272 +2721,137 @@ export default function AdminComplete() {
             </Card>
           </TabsContent>
 
-          {/* Applications Tab */}
-          <TabsContent value="applications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  All Applications ({applications.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4 h-[600px] overflow-y-auto">
-                  {applications.length === 0 ? (
-                    <div className="text-center py-8">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No applications yet</p>
-                    </div>
-                  ) : (
-                    applications.map((application) => (
-                      <div
-                        key={application.id}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">
-                              {application.applicantName}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              {application.applicantEmail}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {application.applicantPhone}
-                            </p>
-                            <div className="mt-2">
-                              <Badge
-                                variant={getStatusBadge(application.status)}
-                              >
-                                {application.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-500 mt-2">
-                              Applied: {formatDate(application.createdAt)}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                updateApplicationStatusMutation.mutate({
-                                  id: application.id,
-                                  status: "accepted",
-                                })
-                              }
-                            >
-                              Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() =>
-                                updateApplicationStatusMutation.mutate({
-                                  id: application.id,
-                                  status: "rejected",
-                                })
-                              }
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* CV-Job Match Tab */}
+          <TabsContent value="cv-job-match" className="space-y-6">
+          <Card className="w-full max-w-6xl mx-auto">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <Briefcase className="h-5 w-5" />
+          Job → Matching CVs
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col md:flex-row gap-6 items-start">
+          {/* Enhanced Job Selection Section */}
+          <div className="w-full md:w-1/3">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Building2 className="h-5 w-5 text-blue-600" />
+                <Label className="text-lg font-semibold text-blue-900">Select Job</Label>
+              </div>
+              <select
+                className="w-full border-2 border-blue-300 rounded-lg p-3 text-base bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+                value={selectedJobId}
+                onChange={(e) => setSelectedJobId(e.target.value)}
+              >
+                <option value="">-- Select a Job --</option>
+                {jobs.map((job: any) => (
+                  <option key={job.id} value={job.id}>
+                    {job.title} @ {job.company}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-          {/* CVs Tab */}
-          <TabsContent value="cvs" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  CV Showcase Management ({cvShowcase.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4 h-[600px] overflow-y-auto">
-                  {cvShowcase.length === 0 ? (
-                    <div className="text-center py-8">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No CVs uploaded yet</p>
-                    </div>
-                  ) : (
-                    cvShowcase.map((cv) => (
-                      <div
-                        key={cv.id}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{cv.name}</h3>
-                            <p className="text-sm text-gray-600">{cv.email}</p>
-                            <p className="text-sm text-gray-600">{cv.title}</p>
-                            <p className="text-sm text-gray-500">
-                              Uploaded: {formatDate(cv.createdAt)}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                cv.cvFilePath &&
-                                window.open(cv.cvFilePath, "_blank")
-                              }
-                            >
-                              View CV
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => deleteCvMutation.mutate(cv.id)}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
+          {/* Enhanced CV Matches Section */}
+          <div className="flex-1">
+            {isLoadingJobMatches ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading matching CVs...</p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <User className="h-5 w-5 text-gray-600" />
+                  <h4 className="font-semibold text-lg">Matching CVs ({jobMatches.length})</h4>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Directory Tab */}
-          <TabsContent value="directory" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  Professional Directory ({profiles.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-4 h-[500px] overflow-y-auto">
-                    {profiles.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">
-                          No businesses in directory yet
-                        </p>
-                      </div>
-                    ) : (
-                      profiles.map((profile) => (
-                        <div
-                          key={profile.id}
-                          className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+                {jobMatches.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Search className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    <div className="text-muted-foreground">No matching CVs found.</div>
+                  </div>
+                ) : (
+                  <div className="h-96 overflow-y-auto border-2 border-gray-200 rounded-lg bg-gray-50/30 p-2">
+                    <ul className="space-y-3">
+                      {jobMatches.map((cv: any) => (
+                        <li
+                          key={cv.id}
+                          className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
                         >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h3 className="font-semibold">{profile.name}</h3>
-                              <p className="text-sm text-gray-600">
-                                {profile.contact}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                {profile.title}
-                              </p>
-                              {profile.bio && (
-                                <p className="text-sm text-gray-500 mt-2">
-                                  {profile.bio}
-                                </p>
-                              )}
-                              <p className="text-sm text-gray-500">
-                                Added: {formatDate(profile.createdAt)}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  // View profile details logic
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  deleteProfileMutation.mutate(profile.id)
-                                }
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </Button>
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="font-bold text-lg text-gray-900">{cv.name}</div>
+                            <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                              Match Score: 95%
                             </div>
                           </div>
-                        </div>
-                      ))
+                          <div className="text-blue-600 font-medium mb-2">{cv.title}</div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">5 years experience</span>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            <span className="font-medium text-gray-700">Skills: </span>
+                            {cv.skills}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+            {/* <Card>
+              <CardHeader>
+                <CardTitle>CV → Matching Jobs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-4 items-start">
+                  <div className="w-full md:w-1/3">
+                    <Label>Select CV</Label>
+                    <select
+                      className="w-full border rounded p-2"
+                      value={selectedCvId}
+                      onChange={e => setSelectedCvId(e.target.value)}
+                    >
+                      <option value="">-- Select a CV --</option>
+                      {profiles.map((cv: any) => (
+                        <option key={cv.id} value={cv.id}>
+                          {cv.name} - {cv.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    {isLoadingCvMatches ? (
+                      <div>Loading matching jobs...</div>
+                    ) : (
+                      <div>
+                        <h4 className="font-semibold mb-2">Matching Jobs ({cvMatches.length})</h4>
+                        {cvMatches.length === 0 ? (
+                          <div className="text-muted-foreground">No matching jobs found.</div>
+                        ) : (
+                          <ul className="space-y-2">
+                            {cvMatches.map((job: any) => (
+                              <li key={job.id} className="border rounded p-2">
+                                <div className="font-bold">{job.title}</div>
+                                <div>{job.company}</div>
+                                <div className="text-sm text-muted-foreground">{job.skills}</div>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Backup Tab */}
-          <TabsContent value="backup" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-5 w-5" />
-                  System Backup & Recovery
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="border rounded-lg p-4 text-center">
-                      <Download className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-                      <h4 className="font-semibold">Create Backup</h4>
-                      <p className="text-sm text-gray-500 mb-3">
-                        Generate a full system backup
-                      </p>
-                      <Button size="sm">Start Backup</Button>
-                    </div>
-
-                    <div className="border rounded-lg p-4 text-center">
-                      <Upload className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                      <h4 className="font-semibold">Restore Backup</h4>
-                      <p className="text-sm text-gray-500 mb-3">
-                        Restore from existing backup
-                      </p>
-                      <Button size="sm" variant="outline">
-                        Browse Backups
-                      </Button>
-                    </div>
-
-                    <div className="border rounded-lg p-4 text-center">
-                      <Calendar className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                      <h4 className="font-semibold">Schedule Backup</h4>
-                      <p className="text-sm text-gray-500 mb-3">
-                        Set automatic backup schedule
-                      </p>
-                      <Button size="sm" variant="outline">
-                        Configure
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-semibold mb-3">Recent Backups</h4>
-                    <div className="text-center py-4">
-                      <p className="text-gray-500">No backups found</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            </Card> */}
           </TabsContent>
         </Tabs>
 

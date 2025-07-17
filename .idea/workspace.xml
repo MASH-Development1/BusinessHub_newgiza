@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4dd05671-2941-42ee-8855-aeece5fc3e67" name="Changes" comment="" />
+    <list default="true" id="4dd05671-2941-42ee-8855-aeece5fc3e67" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/client/src/lib/convexApi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/lib/convexApi.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/pages/admin-complete.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/admin-complete.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/convex/cvShowcase.ts" beforeDir="false" afterPath="$PROJECT_DIR$/convex/cvShowcase.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/convex/jobs.ts" beforeDir="false" afterPath="$PROJECT_DIR$/convex/jobs.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -60,11 +66,22 @@
       <workItem from="1752664109546" duration="3887000" />
       <workItem from="1752754216534" duration="830000" />
       <workItem from="1752758606728" duration="341000" />
-      <workItem from="1752763220108" duration="846000" />
+      <workItem from="1752763220108" duration="3886000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

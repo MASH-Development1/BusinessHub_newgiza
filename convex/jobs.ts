@@ -175,3 +175,59 @@ export const deleteJob = mutation({
     return { success: true };
   },
 });
+
+// Utility: extract keywords from text
+function extractKeywords(text: string): string[] {
+  const relevantSkills = [
+    // Technical Skills
+    "javascript", "typescript", "react", "node", "python", "java", "php", "sql", "mongodb", "mysql", "html", "css", "angular", "vue", "express", "django", "flask", "spring", "laravel", "aws", "azure", "docker", "kubernetes", "git", "linux", "windows", "oracle", "postgresql", "redis", "elasticsearch",
+    // Business Skills
+    "marketing", "sales", "finance", "accounting", "hr", "management", "consulting", "legal", "healthcare", "engineering", "design", "operations", "procurement", "real estate", "logistics", "manufacturing", "construction", "education", "retail", "hospitality", "telecommunications",
+    // Professional Levels
+    "senior", "junior", "lead", "head", "director", "coordinator", "assistant", "executive", "supervisor", "team", "project", "product", "strategy", "business", "technical",
+    // Industry Terms
+    "digital", "technology", "innovation", "automation", "communication", "customer", "service", "quality", "safety", "compliance", "audit", "risk", "planning", "analysis", "research",
+  ];
+  const words = text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2);
+  return words.filter(
+    (word) =>
+      relevantSkills.includes(word) ||
+      word.includes("engineer") ||
+      word.includes("manager") ||
+      word.includes("developer") ||
+      word.includes("analyst") ||
+      word.includes("specialist") ||
+      word.includes("coordinator") ||
+      word.includes("assistant") ||
+      word.includes("supervisor")
+  );
+}
+
+function calculateMatchScore(keywords1: string[], keywords2: string[]): number {
+  if (keywords1.length === 0 || keywords2.length === 0) return 0;
+  const intersection = keywords1.filter((keyword) => keywords2.includes(keyword));
+  return intersection.length / Math.max(keywords1.length, keywords2.length);
+}
+
+// Query: Find matching CVs for a job
+export const getMatchingCVsForJob = query({
+  args: { jobId: v.id("jobs") },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.jobId);
+    if (!job) throw new Error("Job not found");
+    const allCVs = await ctx.db.query("cv_showcase").collect();
+    const jobKeywords = extractKeywords(
+      (job.title || "") + " " + (job.industry || "") + " " + (job.skills || "")
+    );
+    return allCVs.filter((cv) => {
+      const cvKeywords = extractKeywords(
+        (cv.name || "") + " " + (cv.title || "") + " " + (cv.section || "") + " " + (cv.bio || "")
+      );
+      return calculateMatchScore(jobKeywords, cvKeywords) > 0.3;
+    });
+  },
+});

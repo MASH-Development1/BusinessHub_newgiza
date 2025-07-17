@@ -707,3 +707,29 @@ export const usePermanentlyDeleteRemovedInternship = () => {
     },
   });
 };
+
+// Hook to get matching CVs for a job
+export const useMatchingCVsForJob = (jobId: string | null) => {
+  const convex = useConvex();
+  return useQuery({
+    queryKey: ["matchingCVsForJob", jobId],
+    queryFn: async () => {
+      if (!jobId) return [];
+      return await convex.query(api.jobs.getMatchingCVsForJob, { jobId });
+    },
+    enabled: !!jobId,
+  });
+};
+
+// Hook to get matching jobs for a CV
+export const useMatchingJobsForCV = (cvId: string | null) => {
+  const convex = useConvex();
+  return useQuery({
+    queryKey: ["matchingJobsForCV", cvId],
+    queryFn: async () => {
+      if (!cvId) return [];
+      return await convex.query(api.cvShowcase.getMatchingJobsForCV, { cvId });
+    },
+    enabled: !!cvId,
+  });
+};
