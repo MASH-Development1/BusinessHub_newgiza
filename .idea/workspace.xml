@@ -4,14 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4dd05671-2941-42ee-8855-aeece5fc3e67" name="Changes" comment="" />
+    <list default="true" id="4dd05671-2941-42ee-8855-aeece5fc3e67" name="Changes" comment="removed cv-job-match tab from admin complete page&#10;&#10;(cherry picked from commit 4c4d8ba263743cd75df7aa03794a00f33d3c87a4)">
+      <changelist_data name="Ali-Dmerdash" email="96997495+ali-dmerdash@users.noreply.github.com" date="1752769021000" automatic="true" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="Ali-Dmerdash &lt;96997495+ali-dmerdash@users.noreply.github.com&gt;" />
+      </list>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -60,7 +71,8 @@
       <workItem from="1752664109546" duration="3887000" />
       <workItem from="1752754216534" duration="830000" />
       <workItem from="1752758606728" duration="341000" />
-      <workItem from="1752763220108" duration="5525000" />
+      <workItem from="1752763220108" duration="7263000" />
+      <workItem from="1753112417854" duration="496000" />
     </task>
     <servers />
   </component>
@@ -77,5 +89,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="removed cv-job-match tab from admin complete page&#10;&#10;(cherry picked from commit 4c4d8ba263743cd75df7aa03794a00f33d3c87a4)" />
+    <option name="LAST_COMMIT_MESSAGE" value="removed cv-job-match tab from admin complete page&#10;&#10;(cherry picked from commit 4c4d8ba263743cd75df7aa03794a00f33d3c87a4)" />
   </component>
 </project>
