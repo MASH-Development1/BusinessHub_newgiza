@@ -4,19 +4,52 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { FileText, Search, Users, Mail, Phone, ExternalLink, Briefcase, Edit, Save, Upload, Eye, Lock, LogIn } from "lucide-react";
+import {
+  FileText,
+  Search,
+  Users,
+  Mail,
+  Phone,
+  ExternalLink,
+  Briefcase,
+  Edit,
+  Save,
+  Upload,
+  Eye,
+  Lock,
+  LogIn,
+} from "lucide-react";
 import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { CvShowcase } from "@shared/schema";
+import type { CvShowcase } from "@/lib/typeAdapter";
 import { CV_SHOWCASE_SECTIONS } from "@shared/sections";
-import { useCvShowcase, useUpdateCvShowcase } from "@/lib/convexApi";
+import {
+  useCvShowcase,
+  useUpdateCvShowcase,
+  useCvFileUrl,
+} from "@/lib/convexApi";
 import { useToast } from "@/hooks/use-toast";
+import { CVCard } from "@/components/CVCard";
+import { CVDownloadButton } from "@/components/CVDownloadButton";
 
 const editCvSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -54,18 +87,24 @@ export default function CvShowcase() {
   };
 
   // Calculate CV counts for each section
-  const sectionCounts = CV_SHOWCASE_SECTIONS.reduce((acc, section) => {
-    if (section.value === "") {
-      acc[section.value] = cvs.length;
-    } else {
-      acc[section.value] = cvs.filter(cv => cv.section === section.value).length;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const sectionCounts = CV_SHOWCASE_SECTIONS.reduce(
+    (acc, section) => {
+      if (section.value === "") {
+        acc[section.value] = cvs.length;
+      } else {
+        acc[section.value] = cvs.filter(
+          (cv) => cv.section === section.value
+        ).length;
+      }
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   const filteredCvs = cvs.filter((cv) => {
     const matchesSection = !selectedSection || cv.section === selectedSection;
-    const matchesSearch = !searchQuery || 
+    const matchesSearch =
+      !searchQuery ||
       cv.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       cv.skills?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -85,7 +124,8 @@ export default function CvShowcase() {
             CV <span className="text-primary">Showcase</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Discover talented professionals within the NewGiza community organized by expertise areas.
+            Discover talented professionals within the NewGiza community
+            organized by expertise areas.
           </p>
           <Link href="/cv-upload">
             <Button size="lg" className="text-lg px-8">
@@ -107,14 +147,21 @@ export default function CvShowcase() {
               {CV_SHOWCASE_SECTIONS.map((section) => (
                 <Button
                   key={section.value}
-                  variant={selectedSection === section.value ? "default" : "outline"}
+                  variant={
+                    selectedSection === section.value ? "default" : "outline"
+                  }
                   size="sm"
                   onClick={() => setSelectedSection(section.value)}
                   className="h-auto p-4 flex flex-col items-center text-center min-h-[80px]"
                 >
                   <div className="flex items-center gap-1 mb-2">
-                    <span className="font-semibold text-sm leading-tight">{section.name}</span>
-                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 ml-1">
+                    <span className="font-semibold text-sm leading-tight">
+                      {section.name}
+                    </span>
+                    <Badge
+                      variant="secondary"
+                      className="text-xs px-1.5 py-0.5 ml-1"
+                    >
                       {sectionCounts[section.value] || 0}
                     </Badge>
                   </div>
@@ -152,15 +199,16 @@ export default function CvShowcase() {
           <div className="text-center py-12">
             <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              {selectedSection ? `No professionals found in ${selectedSection}` : "No CVs found"}
+              {selectedSection
+                ? `No professionals found in ${selectedSection}`
+                : "No CVs found"}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {selectedSection 
+              {selectedSection
                 ? "Try selecting a different section or clearing your search."
-                : searchQuery 
+                : searchQuery
                   ? "Try adjusting your search terms or browse all sections."
-                  : "Be the first to upload your CV to the community showcase!"
-              }
+                  : "Be the first to upload your CV to the community showcase!"}
             </p>
             <Link href="/cv-upload">
               <Button>Upload Your CV</Button>
@@ -170,155 +218,23 @@ export default function CvShowcase() {
           <>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">
-                {selectedSection || "All Professionals"} 
-                <span className="text-muted-foreground ml-2">({filteredCvs.length})</span>
+                {selectedSection || "All Professionals"}
+                <span className="text-muted-foreground ml-2">
+                  ({filteredCvs.length})
+                </span>
               </h2>
             </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredCvs.map((cv) => (
-                <Card key={cv.id} className="bg-card border-border hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="font-bold text-lg">{cv.name}</h3>
-                        <p className="text-primary font-semibold">{cv.title}</p>
-                        <Badge variant="secondary" className="mt-2">
-                          {cv.section}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    {cv.bio && cv.bio.trim() ? (
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                        {cv.bio}
-                      </p>
-                    ) : (
-                      <p className="text-muted-foreground text-sm mb-4 italic">
-                        Professional summary not available
-                      </p>
-                    )}
-
-                    {cv.skills && cv.skills.trim() ? (
-                      <div className="mb-4">
-                        <p className="text-sm font-semibold mb-2">Skills:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {cv.skills.split(',').slice(0, 3).map((skill, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {skill.trim()}
-                            </Badge>
-                          ))}
-                          {cv.skills.split(',').length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{cv.skills.split(',').length - 3} more
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mb-4">
-                        <p className="text-sm font-semibold mb-2">Skills:</p>
-                        <p className="text-muted-foreground text-xs italic">Skills not specified</p>
-                      </div>
-                    )}
-
-                    {cv.yearsOfExperience && (
-                      <p className="text-sm text-muted-foreground mb-4">
-                        <Briefcase className="inline h-4 w-4 mr-1" />
-                        {cv.yearsOfExperience} years experience
-                      </p>
-                    )}
-
-                    <div className="pt-4 border-t border-border">
-                      <div className="flex flex-col gap-2">
-                        {/* Main action buttons */}
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="flex-1"
-                            onClick={() => setSelectedCv(cv)}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Profile
-                          </Button>
-                          {cv.cvFileName ? (
-                            <Button 
-                              size="sm" 
-                              className="flex-1"
-                              onClick={() => {
-                                window.open(`/api/cv-showcase/${cv.id}/download`, '_blank');
-                              }}
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              View CV
-                            </Button>
-                          ) : (
-                            <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground italic border border-dashed border-border rounded-md py-2">
-                              No CV added
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Contact and edit buttons */}
-                        <div className="flex gap-1 items-center justify-between">
-                          <div className="flex gap-1">
-                            {cv.email && (
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={`mailto:${cv.email}`}>
-                                  <Mail className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            )}
-                            {cv.phone && (
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={`tel:${cv.phone}`}>
-                                  <Phone className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            )}
-                            {cv.linkedinUrl && (
-                              <Button size="sm" variant="outline" asChild>
-                                <a href={cv.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-4 w-4" />
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                          {canEditCv(cv) ? (
-                            <Button 
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingCv(cv)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          ) : currentUser && !currentUser.isAdmin ? (
-                            <Button 
-                              size="sm"
-                              variant="ghost"
-                              disabled
-                              className="text-muted-foreground"
-                            >
-                              <Lock className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <Link href="/cv-login">
-                              <Button 
-                                size="sm"
-                                variant="outline"
-                                className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                              >
-                                <LogIn className="h-4 w-4 mr-1" />
-                                Login to Edit
-                              </Button>
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <CVCard
+                  key={cv.id}
+                  cv={cv}
+                  currentUser={currentUser}
+                  canEditCv={canEditCv}
+                  setSelectedCv={setSelectedCv}
+                  setEditingCv={setEditingCv}
+                />
               ))}
             </div>
           </>
@@ -327,28 +243,34 @@ export default function CvShowcase() {
 
       {/* Edit CV Dialog */}
       {editingCv && (
-        <EditCvDialog 
-          cv={editingCv} 
+        <EditCvDialog
+          cv={editingCv}
           isOpen={!!editingCv}
           onClose={() => setEditingCv(null)}
-          onSave={(data) => updateCvMutation.mutateAsync({ id: editingCv.id, data })}
+          onSave={(data) =>
+            updateCvMutation.mutateAsync({ id: editingCv.id.toString(), data })
+          }
           isLoading={updateCvMutation.isPending}
         />
       )}
-      
+
       {selectedCv && (
         <Dialog open={!!selectedCv} onOpenChange={() => setSelectedCv(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-2xl">{selectedCv.name}</DialogTitle>
               {selectedCv.title && (
-                <p className="text-primary font-semibold text-lg">{selectedCv.title}</p>
+                <p className="text-primary font-semibold text-lg">
+                  {selectedCv.title}
+                </p>
               )}
             </DialogHeader>
-            
+
             <div className="space-y-6">
               <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary" className="text-sm">{selectedCv.section}</Badge>
+                <Badge variant="secondary" className="text-sm">
+                  {selectedCv.section}
+                </Badge>
                 {selectedCv.yearsOfExperience && (
                   <Badge variant="outline" className="text-sm">
                     <Briefcase className="h-3 w-3 mr-1" />
@@ -359,15 +281,21 @@ export default function CvShowcase() {
 
               {selectedCv.bio && selectedCv.bio.trim() && (
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Professional Summary</h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{selectedCv.bio}</p>
+                  <h3 className="font-semibold text-lg mb-2">
+                    Professional Summary
+                  </h3>
+                  <p className="text-muted-foreground whitespace-pre-wrap">
+                    {selectedCv.bio}
+                  </p>
                 </div>
               )}
 
               {selectedCv.experience && selectedCv.experience.trim() && (
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Experience</h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{selectedCv.experience}</p>
+                  <p className="text-muted-foreground whitespace-pre-wrap">
+                    {selectedCv.experience}
+                  </p>
                 </div>
               )}
 
@@ -375,7 +303,7 @@ export default function CvShowcase() {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">Skills</h3>
                   <div className="flex flex-wrap gap-2">
-                    {selectedCv.skills.split(',').map((skill, index) => (
+                    {selectedCv.skills.split(",").map((skill, index) => (
                       <Badge key={index} variant="outline" className="text-sm">
                         {skill.trim()}
                       </Badge>
@@ -385,6 +313,7 @@ export default function CvShowcase() {
               )}
 
               <div className="flex flex-wrap gap-4 pt-4 border-t border-border">
+                <CVDownloadButton cv={selectedCv} />
                 {selectedCv.email && (
                   <Button variant="outline" asChild>
                     <a href={`mailto:${selectedCv.email}`}>
@@ -403,7 +332,11 @@ export default function CvShowcase() {
                 )}
                 {selectedCv.linkedinUrl && (
                   <Button variant="outline" asChild>
-                    <a href={selectedCv.linkedinUrl} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={selectedCv.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       LinkedIn
                     </a>
@@ -418,16 +351,16 @@ export default function CvShowcase() {
   );
 }
 
-function EditCvDialog({ 
-  cv, 
-  isOpen, 
-  onClose, 
+function EditCvDialog({
+  cv,
+  isOpen,
+  onClose,
   onSave,
-  isLoading 
-}: { 
-  cv: CvShowcase; 
-  isOpen: boolean; 
-  onClose: () => void; 
+  isLoading,
+}: {
+  cv: CvShowcase;
+  isOpen: boolean;
+  onClose: () => void;
   onSave: (data: EditCvData) => void;
   isLoading: boolean;
 }) {
@@ -450,26 +383,26 @@ function EditCvDialog({
 
   const updateWithFileMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      console.log('🔄 Attempting file upload CV update...');
-      console.log('📋 Document cookies:', document.cookie);
-      console.log('📝 FormData entries:');
+      console.log("🔄 Attempting file upload CV update...");
+      console.log("📋 Document cookies:", document.cookie);
+      console.log("📝 FormData entries:");
       formData.forEach((value, key) => {
         console.log(`  ${key}:`, value);
       });
-      
+
       const response = await fetch(`/api/cv-showcase/${cv.id}`, {
-        method: 'PUT',
+        method: "PUT",
         body: formData,
-        credentials: 'include', // Include session cookies
+        credentials: "include", // Include session cookies
       });
-      
-      console.log('📡 Response status:', response.status);
+
+      console.log("📡 Response status:", response.status);
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Error response:', errorText);
+        console.error("❌ Error response:", errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
-      
+
       return response;
     },
     onSuccess: () => {
@@ -480,7 +413,7 @@ function EditCvDialog({
     onError: (error: any) => {
       console.error("Error updating CV with file:", error);
       // Show detailed error to user
-      alert(`Failed to update CV: ${error.message || 'Unknown error'}`);
+      alert(`Failed to update CV: ${error.message || "Unknown error"}`);
     },
   });
 
@@ -491,7 +424,7 @@ function EditCvDialog({
       Object.entries(data).forEach(([key, value]) => {
         if (value) formData.append(key, value);
       });
-      formData.append('cv', selectedFile);
+      formData.append("cv", selectedFile);
       updateWithFileMutation.mutate(formData);
     } else {
       // If no file, use regular JSON update
@@ -505,9 +438,12 @@ function EditCvDialog({
         <DialogHeader>
           <DialogTitle>Edit CV Profile</DialogTitle>
         </DialogHeader>
-        
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -522,7 +458,7 @@ function EditCvDialog({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="title"
@@ -546,7 +482,10 @@ function EditCvDialog({
                   <FormItem>
                     <FormLabel>Professional Section</FormLabel>
                     <FormControl>
-                      <select {...field} className="w-full p-2 border rounded-md bg-background">
+                      <select
+                        {...field}
+                        className="w-full p-2 border rounded-md bg-background"
+                      >
                         <option value="">Select Section</option>
                         {CV_SHOWCASE_SECTIONS.slice(1).map((section) => (
                           <option key={section.value} value={section.value}>
@@ -559,7 +498,7 @@ function EditCvDialog({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="phone"
@@ -582,7 +521,10 @@ function EditCvDialog({
                 <FormItem>
                   <FormLabel>LinkedIn URL</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="https://linkedin.com/in/..." />
+                    <Input
+                      {...field}
+                      placeholder="https://linkedin.com/in/..."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -610,7 +552,11 @@ function EditCvDialog({
                 <FormItem>
                   <FormLabel>Skills</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={2} placeholder="Comma-separated skills" />
+                    <Textarea
+                      {...field}
+                      rows={2}
+                      placeholder="Comma-separated skills"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -638,7 +584,9 @@ function EditCvDialog({
                 {selectedFile ? (
                   <div className="flex items-center justify-center space-x-2">
                     <FileText className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-medium">{selectedFile.name}</span>
+                    <span className="text-sm font-medium">
+                      {selectedFile.name}
+                    </span>
                     <Button
                       type="button"
                       variant="ghost"
@@ -653,9 +601,17 @@ function EditCvDialog({
                     <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <div className="text-sm text-muted-foreground">
                       {cv.cvFileName ? (
-                        <p>Current: {cv.cvFileName}<br />Upload new CV to replace</p>
+                        <p>
+                          Current: {cv.cvFileName}
+                          <br />
+                          Upload new CV to replace
+                        </p>
                       ) : (
-                        <p>No CV uploaded yet<br />Upload your CV file</p>
+                        <p>
+                          No CV uploaded yet
+                          <br />
+                          Upload your CV file
+                        </p>
                       )}
                     </div>
                     <Input

@@ -21,7 +21,7 @@ export const getCvShowcase = query({
       });
     }
 
-    return cvShowcase;
+    return cvShowcase.reverse();
   },
 });
 
@@ -34,6 +34,18 @@ export const getCv = query({
       throw new Error("CV not found");
     }
     return cv;
+  },
+});
+
+// Query to get CV file URL
+export const getCvFileUrl = query({
+  args: { id: v.id("cv_showcase") },
+  handler: async (ctx, args) => {
+    const cv = await ctx.db.get(args.id);
+    if (!cv || !cv.cv_storage_id) {
+      return null;
+    }
+    return await ctx.storage.getUrl(cv.cv_storage_id);
   },
 });
 
@@ -52,11 +64,12 @@ export const createCvShowcase = mutation({
     years_of_experience: v.optional(v.string()),
     cv_file_name: v.optional(v.string()),
     cv_file_path: v.optional(v.string()),
+    cv_storage_id: v.optional(v.id("_storage")),
     linkedin_url: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-    
+
     const cvId = await ctx.db.insert("cv_showcase", {
       ...args,
       created_at: now,
@@ -83,12 +96,13 @@ export const updateCvShowcase = mutation({
     years_of_experience: v.optional(v.string()),
     cv_file_name: v.optional(v.string()),
     cv_file_path: v.optional(v.string()),
+    cv_storage_id: v.optional(v.id("_storage")),
     linkedin_url: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
     const now = new Date().toISOString();
-    
+
     await ctx.db.patch(id, {
       ...updates,
       updated_at: now,
@@ -110,19 +124,96 @@ export const deleteCvShowcase = mutation({
     await ctx.db.delete(args.id);
     return { success: true };
   },
-}); 
+});
 
 // Utility: extract keywords from text
 function extractKeywords(text: string): string[] {
   const relevantSkills = [
     // Technical Skills
-    "javascript", "typescript", "react", "node", "python", "java", "php", "sql", "mongodb", "mysql", "html", "css", "angular", "vue", "express", "django", "flask", "spring", "laravel", "aws", "azure", "docker", "kubernetes", "git", "linux", "windows", "oracle", "postgresql", "redis", "elasticsearch",
+    "javascript",
+    "typescript",
+    "react",
+    "node",
+    "python",
+    "java",
+    "php",
+    "sql",
+    "mongodb",
+    "mysql",
+    "html",
+    "css",
+    "angular",
+    "vue",
+    "express",
+    "django",
+    "flask",
+    "spring",
+    "laravel",
+    "aws",
+    "azure",
+    "docker",
+    "kubernetes",
+    "git",
+    "linux",
+    "windows",
+    "oracle",
+    "postgresql",
+    "redis",
+    "elasticsearch",
     // Business Skills
-    "marketing", "sales", "finance", "accounting", "hr", "management", "consulting", "legal", "healthcare", "engineering", "design", "operations", "procurement", "real estate", "logistics", "manufacturing", "construction", "education", "retail", "hospitality", "telecommunications",
+    "marketing",
+    "sales",
+    "finance",
+    "accounting",
+    "hr",
+    "management",
+    "consulting",
+    "legal",
+    "healthcare",
+    "engineering",
+    "design",
+    "operations",
+    "procurement",
+    "real estate",
+    "logistics",
+    "manufacturing",
+    "construction",
+    "education",
+    "retail",
+    "hospitality",
+    "telecommunications",
     // Professional Levels
-    "senior", "junior", "lead", "head", "director", "coordinator", "assistant", "executive", "supervisor", "team", "project", "product", "strategy", "business", "technical",
+    "senior",
+    "junior",
+    "lead",
+    "head",
+    "director",
+    "coordinator",
+    "assistant",
+    "executive",
+    "supervisor",
+    "team",
+    "project",
+    "product",
+    "strategy",
+    "business",
+    "technical",
     // Industry Terms
-    "digital", "technology", "innovation", "automation", "communication", "customer", "service", "quality", "safety", "compliance", "audit", "risk", "planning", "analysis", "research",
+    "digital",
+    "technology",
+    "innovation",
+    "automation",
+    "communication",
+    "customer",
+    "service",
+    "quality",
+    "safety",
+    "compliance",
+    "audit",
+    "risk",
+    "planning",
+    "analysis",
+    "research",
   ];
   const words = text
     .toLowerCase()
@@ -145,7 +236,9 @@ function extractKeywords(text: string): string[] {
 
 function calculateMatchScore(keywords1: string[], keywords2: string[]): number {
   if (keywords1.length === 0 || keywords2.length === 0) return 0;
-  const intersection = keywords1.filter((keyword) => keywords2.includes(keyword));
+  const intersection = keywords1.filter((keyword) =>
+    keywords2.includes(keyword)
+  );
   return intersection.length / Math.max(keywords1.length, keywords2.length);
 }
 
@@ -157,12 +250,28 @@ export const getMatchingJobsForCV = query({
     if (!cv) throw new Error("CV not found");
     const allJobs = await ctx.db.query("jobs").collect();
     const cvKeywords = extractKeywords(
-      (cv.name || "") + " " + (cv.title || "") + " " + (cv.section || "") + " " + (cv.bio || "") + " " + (cv.skills || "")
+      (cv.name || "") +
+        " " +
+        (cv.title || "") +
+        " " +
+        (cv.section || "") +
+        " " +
+        (cv.bio || "") +
+        " " +
+        (cv.skills || "")
     );
     const jobMatches = allJobs
       .map((job) => {
         const jobKeywords = extractKeywords(
-          (job.title || "") + " " + (job.industry || "") + " " + (job.skills || "") + " " + (job.description || "") + " " + (job.requirements || "")
+          (job.title || "") +
+            " " +
+            (job.industry || "") +
+            " " +
+            (job.skills || "") +
+            " " +
+            (job.description || "") +
+            " " +
+            (job.requirements || "")
         );
         const score = calculateMatchScore(cvKeywords, jobKeywords);
         return { ...job, score: Math.round(score * 100) };
@@ -171,4 +280,4 @@ export const getMatchingJobsForCV = query({
       .sort((a, b) => b.score - a.score);
     return jobMatches;
   },
-}); 
+});

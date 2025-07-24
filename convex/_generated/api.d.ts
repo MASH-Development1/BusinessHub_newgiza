@@ -22,6 +22,7 @@ import type * as communityBenefits from "../communityBenefits.js";
 import type * as courses from "../courses.js";
 import type * as cvProtection from "../cvProtection.js";
 import type * as cvShowcase from "../cvShowcase.js";
+import type * as files from "../files.js";
 import type * as internships from "../internships.js";
 import type * as jobs from "../jobs.js";
 import type * as profiles from "../profiles.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   courses: typeof courses;
   cvProtection: typeof cvProtection;
   cvShowcase: typeof cvShowcase;
+  files: typeof files;
   internships: typeof internships;
   jobs: typeof jobs;
   profiles: typeof profiles;

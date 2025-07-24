@@ -127,6 +127,7 @@ export default defineSchema({
     years_of_experience: v.optional(v.union(v.string(), v.null())),
     cv_file_name: v.optional(v.union(v.string(), v.null())),
     cv_file_path: v.optional(v.union(v.string(), v.null())),
+    cv_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
     linkedin_url: v.optional(v.union(v.string(), v.null())),
     created_at: v.string(), // ISO8601 date string
     updated_at: v.string(), // ISO8601 date string

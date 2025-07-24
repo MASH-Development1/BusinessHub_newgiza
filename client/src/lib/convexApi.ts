@@ -352,14 +352,82 @@ export const useCv = (id: Id<"cv_showcase">) => {
   });
 };
 
+// Helper function to map camelCase to snake_case for CV showcase fields
+const mapCvFieldNames = (data: any) => {
+  const fieldMapping: Record<string, string> = {
+    linkedinUrl: "linkedin_url",
+    yearsOfExperience: "years_of_experience",
+    cvFileName: "cv_file_name",
+    cvFilePath: "cv_file_path",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  };
+
+  const mappedData: any = {};
+  Object.entries(data).forEach(([key, value]) => {
+    const mappedKey = fieldMapping[key] || key;
+    mappedData[mappedKey] = value;
+  });
+
+  return mappedData;
+};
+
 // Hook to create CV showcase
 export const useCreateCvShowcase = () => {
   const convex = useConvex();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) =>
-      convex.mutation(api.cvShowcase.createCvShowcase, data),
+    mutationFn: async (data: any) => {
+      if (data instanceof FormData) {
+        // Handle file upload with FormData
+        const file = data.get("cv") as File;
+        let cvStorageId = null;
+
+        if (file) {
+          // Generate upload URL
+          const uploadUrl = await convex.action(
+            api.files.generateUploadUrl,
+            {}
+          );
+
+          // Upload file to Convex storage
+          const result = await fetch(uploadUrl, {
+            method: "POST",
+            body: file,
+          });
+
+          if (!result.ok) {
+            throw new Error("Failed to upload file");
+          }
+
+          const { storageId } = await result.json();
+          cvStorageId = storageId;
+        }
+
+        // Prepare data object from FormData
+        const cvData: any = {};
+        Array.from(data.entries()).forEach(([key, value]) => {
+          if (key !== "cv" && value) {
+            cvData[key] = value;
+          }
+        });
+
+        if (cvStorageId) {
+          cvData.cv_storage_id = cvStorageId;
+          cvData.cv_file_name = file?.name;
+        }
+
+        // Map camelCase field names to snake_case
+        const mappedData = mapCvFieldNames(cvData);
+
+        return convex.mutation(api.cvShowcase.createCvShowcase, mappedData);
+      } else {
+        // Handle regular data object
+        const mappedData = mapCvFieldNames(data);
+        return convex.mutation(api.cvShowcase.createCvShowcase, mappedData);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cvShowcase"] });
     },
@@ -372,11 +440,59 @@ export const useUpdateCvShowcase = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
-      convex.mutation(api.cvShowcase.updateCvShowcase, {
-        id: id as any,
-        ...data,
-      }),
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      if (data instanceof FormData) {
+        // Handle file upload with FormData
+        const file = data.get("cv") as File;
+        let cvStorageId = null;
+
+        if (file) {
+          // Generate upload URL
+          const uploadUrl = await convex.action(
+            api.files.generateUploadUrl,
+            {}
+          );
+
+          // Upload file to Convex storage
+          const result = await fetch(uploadUrl, {
+            method: "POST",
+            body: file,
+          });
+
+          if (!result.ok) {
+            throw new Error("Failed to upload file");
+          }
+
+          const { storageId } = await result.json();
+          cvStorageId = storageId;
+        }
+
+        // Prepare data object from FormData
+        const cvData: any = { id: id as any };
+        Array.from(data.entries()).forEach(([key, value]) => {
+          if (key !== "cv" && value) {
+            cvData[key] = value;
+          }
+        });
+
+        if (cvStorageId) {
+          cvData.cv_storage_id = cvStorageId;
+          cvData.cv_file_name = file?.name;
+        }
+
+        // Map camelCase field names to snake_case
+        const mappedData = mapCvFieldNames(cvData);
+
+        return convex.mutation(api.cvShowcase.updateCvShowcase, mappedData);
+      } else {
+        // Handle regular data object
+        const mappedData = mapCvFieldNames(data);
+        return convex.mutation(api.cvShowcase.updateCvShowcase, {
+          id: id as any,
+          ...mappedData,
+        });
+      }
+    },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["cvShowcase"] });
       queryClient.invalidateQueries({ queryKey: ["cv", id] });
@@ -709,7 +825,7 @@ export const usePermanentlyDeleteRemovedInternship = () => {
 };
 
 // Hook to get matching CVs for a job
-export const useMatchingCVsForJob = (jobId: string | null) => {
+export const useMatchingCVsForJob = (jobId: Id<"jobs"> | null) => {
   const convex = useConvex();
   return useQuery({
     queryKey: ["matchingCVsForJob", jobId],
@@ -722,13 +838,26 @@ export const useMatchingCVsForJob = (jobId: string | null) => {
 };
 
 // Hook to get matching jobs for a CV
-export const useMatchingJobsForCV = (cvId: string | null) => {
+export const useMatchingJobsForCV = (cvId: Id<"cv_showcase"> | null) => {
   const convex = useConvex();
   return useQuery({
     queryKey: ["matchingJobsForCV", cvId],
     queryFn: async () => {
       if (!cvId) return [];
       return await convex.query(api.cvShowcase.getMatchingJobsForCV, { cvId });
+    },
+    enabled: !!cvId,
+  });
+};
+
+// Hook to get CV file URL
+export const useCvFileUrl = (cvId: Id<"cv_showcase"> | null) => {
+  const convex = useConvex();
+  return useQuery({
+    queryKey: ["cvFileUrl", cvId],
+    queryFn: async () => {
+      if (!cvId) return null;
+      return convex.query(api.cvShowcase.getCvFileUrl, { id: cvId });
     },
     enabled: !!cvId,
   });

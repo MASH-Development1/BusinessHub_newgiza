@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Building2, Search, Download, Calendar } from "lucide-react"
+import { Building, Building2, Search, Download, Calendar } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -970,8 +970,10 @@ export default function AdminComplete() {
   const [selectedCvId, setSelectedCvId] = useState<string>("");
 
   // Use Convex hooks for matching
-  const { data: jobMatches = [], isLoading: isLoadingJobMatches } = useMatchingCVsForJob(selectedJobId || null);
-  const { data: cvMatches = [], isLoading: isLoadingCvMatches } = useMatchingJobsForCV(selectedCvId || null);
+  const { data: jobMatches = [], isLoading: isLoadingJobMatches } =
+    useMatchingCVsForJob(selectedJobId || null);
+  const { data: cvMatches = [], isLoading: isLoadingCvMatches } =
+    useMatchingJobsForCV(selectedCvId || null);
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
@@ -2829,8 +2831,12 @@ export default function AdminComplete() {
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <h3 className="font-semibold">{profile.name}</h3>
-                            <p className="text-sm text-gray-600">{profile.email}</p>
-                            <p className="text-sm text-gray-600">{profile.title}</p>
+                            <p className="text-sm text-gray-600">
+                              {profile.contact}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {profile.title}
+                            </p>
                             <p className="text-sm text-gray-500">
                               Uploaded: {formatDate(profile.createdAt)}
                             </p>
@@ -2849,7 +2855,9 @@ export default function AdminComplete() {
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => deleteCvMutation.mutate(profile.id)}
+                              onClick={() =>
+                                deleteCvMutation.mutate(profile.id)
+                              }
                             >
                               Delete
                             </Button>
@@ -2864,91 +2872,105 @@ export default function AdminComplete() {
           </TabsContent>
 
           {/* CV-Job Match Tab */}
-            <TabsContent value="cv-job-match" className="space-y-6">
-                <Card className="w-full max-w-6xl mx-auto">
-                    <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-2 text-xl">
-                            <Briefcase className="h-5 w-5" />
-                            Job → Matching CVs
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col md:flex-row gap-6 items-start">
-                            {/* Enhanced Job Selection Section */}
-                            <div className="w-full md:w-1/3">
-                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Building2 className="h-5 w-5 text-blue-600" />
-                                        <Label className="text-lg font-semibold text-blue-900">Select Job</Label>
-                                    </div>
-                                    <select
-                                        className="w-full border-2 border-blue-300 rounded-lg p-3 text-base bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
-                                        value={selectedJobId}
-                                        onChange={(e) => setSelectedJobId(e.target.value)}
-                                    >
-                                        <option value="">-- Select a Job --</option>
-                                        {jobs.map((job: any) => (
-                                            <option key={job.id} value={job.id}>
-                                                {job.title} @ {job.company}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
+          <TabsContent value="cv-job-match" className="space-y-6">
+            <Card className="w-full max-w-6xl mx-auto">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Briefcase className="h-5 w-5" />
+                  Job → Matching CVs
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  {/* Enhanced Job Selection Section */}
+                  <div className="w-full md:w-1/3">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Building2 className="h-5 w-5 text-blue-600" />
+                        <Label className="text-lg font-semibold text-blue-900">
+                          Select Job
+                        </Label>
+                      </div>
+                      <select
+                        className="w-full border-2 border-blue-300 rounded-lg p-3 text-base bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+                        value={selectedJobId}
+                        onChange={(e) => setSelectedJobId(e.target.value)}
+                      >
+                        <option value="">-- Select a Job --</option>
+                        {jobs.map((job: any) => (
+                          <option key={job.id} value={job.id}>
+                            {job.title} @ {job.company}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-                            {/* Enhanced CV Matches Section */}
-                            <div className="flex-1">
-                                {isLoadingJobMatches ? (
-                                    <div className="text-center py-12">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                                        <p className="text-gray-600">Loading matching CVs...</p>
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <User className="h-5 w-5 text-gray-600" />
-                                            <h4 className="font-semibold text-lg">Matching CVs ({jobMatches.length})</h4>
-                                        </div>
-                                        {jobMatches.length === 0 ? (
-                                            <div className="text-center py-8 text-gray-500">
-                                                <Search className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                                                <div className="text-muted-foreground">No matching CVs found.</div>
-                                            </div>
-                                        ) : (
-                                            <div className="h-96 overflow-y-auto border-2 border-gray-200 rounded-lg bg-gray-50/30 p-2">
-                                                <ul className="space-y-3">
-                                                    {jobMatches.map((cv: any) => (
-                                                        <li
-                                                            key={cv.id}
-                                                            className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
-                                                        >
-                                                            <div className="flex items-start justify-between mb-2">
-                                                                <div className="font-bold text-lg text-gray-900">{cv.name}</div>
-                                                                <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                                                                    Match Score: 95%
-                                                                </div>
-                                                            </div>
-                                                            <div className="text-blue-600 font-medium mb-2">{cv.title}</div>
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Clock className="h-4 w-4 text-gray-500" />
-                                                                <span className="text-sm text-gray-600">5 years experience</span>
-                                                            </div>
-                                                            <div className="text-sm text-muted-foreground">
-                                                                <span className="font-medium text-gray-700">Skills: </span>
-                                                                {cv.skills}
-                                                            </div>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                  {/* Enhanced CV Matches Section */}
+                  <div className="flex-1">
+                    {isLoadingJobMatches ? (
+                      <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p className="text-gray-600">Loading matching CVs...</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center gap-2 mb-4">
+                          <User className="h-5 w-5 text-gray-600" />
+                          <h4 className="font-semibold text-lg">
+                            Matching CVs ({jobMatches.length})
+                          </h4>
                         </div>
-                    </CardContent>
-                </Card>
-                {/* <Card>
+                        {jobMatches.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <Search className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                            <div className="text-muted-foreground">
+                              No matching CVs found.
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="h-96 overflow-y-auto border-2 border-gray-200 rounded-lg bg-gray-50/30 p-2">
+                            <ul className="space-y-3">
+                              {jobMatches.map((cv: any) => (
+                                <li
+                                  key={cv.id}
+                                  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                                >
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="font-bold text-lg text-gray-900">
+                                      {cv.name}
+                                    </div>
+                                    <div className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                                      Match Score: 95%
+                                    </div>
+                                  </div>
+                                  <div className="text-blue-600 font-medium mb-2">
+                                    {cv.title}
+                                  </div>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <Clock className="h-4 w-4 text-gray-500" />
+                                    <span className="text-sm text-gray-600">
+                                      5 years experience
+                                    </span>
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    <span className="font-medium text-gray-700">
+                                      Skills:{" "}
+                                    </span>
+                                    {cv.skills}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>CV → Matching Jobs</CardTitle>
               </CardHeader>
@@ -2994,7 +3016,7 @@ export default function AdminComplete() {
                 </div>
               </CardContent>
             </Card> */}
-            </TabsContent>
+          </TabsContent>
           {/* Directory Tab */}
           <TabsContent value="directory" className="space-y-6">
             <Card>
