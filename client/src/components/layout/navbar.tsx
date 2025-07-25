@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,11 @@ export default function Navbar() {
       toast({ title: "Logged out", description: "You have been logged out." });
       navigate("/login");
     } catch (error) {
-      toast({ title: "Logout error", description: "Failed to log out.", variant: "destructive" });
+      toast({
+        title: "Logout error",
+        description: "Failed to log out.",
+        variant: "destructive",
+      });
       navigate("/login");
     }
   };
@@ -42,6 +45,19 @@ export default function Navbar() {
   };
 
   const handleNavigation = (href: string) => {
+    // Check if user is trying to access admin page
+    if (href === "/admin") {
+      // If user is already an admin, go to admin dashboard
+      // Otherwise, redirect to admin login
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/admin-login");
+      }
+      setIsMobileMenuOpen(false);
+      return;
+    }
+
     navigate(href);
     setIsMobileMenuOpen(false);
   };
@@ -52,8 +68,8 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo Section */}
           <div className="flex-shrink-0">
-            <button 
-              onClick={() => handleNavigation("/")} 
+            <button
+              onClick={() => handleNavigation("/")}
               className="flex items-center cursor-pointer text-xl font-bold text-primary hover:text-primary/80 transition-colors"
             >
               HubWithin
@@ -66,10 +82,10 @@ export default function Navbar() {
               <button
                 key={item.name}
                 onClick={() => handleNavigation(item.href)}
-                className={`nav-link ${isActive(item.href) ? 'active' : ''} cursor-pointer whitespace-nowrap px-4 py-2 rounded-md font-medium transition-colors ${
-                  isActive(item.href) 
-                    ? 'text-primary font-semibold bg-primary/10' 
-                    : 'text-foreground hover:text-primary'
+                className={`nav-link ${isActive(item.href) ? "active" : ""} cursor-pointer whitespace-nowrap px-4 py-2 rounded-md font-medium transition-colors ${
+                  isActive(item.href)
+                    ? "text-primary font-semibold bg-primary/10"
+                    : "text-foreground hover:text-primary"
                 }`}
               >
                 {item.name}
@@ -113,10 +129,10 @@ export default function Navbar() {
                 <button
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
-                  className={`block w-full text-left nav-link ${isActive(item.href) ? 'active' : ''} cursor-pointer px-4 py-3 rounded-md font-medium transition-colors ${
-                    isActive(item.href) 
-                      ? 'text-primary font-semibold bg-primary/10' 
-                      : 'text-foreground hover:text-primary'
+                  className={`block w-full text-left nav-link ${isActive(item.href) ? "active" : ""} cursor-pointer px-4 py-3 rounded-md font-medium transition-colors ${
+                    isActive(item.href)
+                      ? "text-primary font-semibold bg-primary/10"
+                      : "text-foreground hover:text-primary"
                   }`}
                 >
                   {item.name}

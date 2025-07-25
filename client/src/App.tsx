@@ -28,7 +28,13 @@ import JoinCommunity from "@/pages/join-community";
 import CommunityBenefits from "@/pages/community-benefits";
 
 // Protected Route Component
-const ProtectedRoute = ({ children, requireAdmin = false }: { children: React.ReactNode; requireAdmin?: boolean }) => {
+const ProtectedRoute = ({
+  children,
+  requireAdmin = false,
+}: {
+  children: React.ReactNode;
+  requireAdmin?: boolean;
+}) => {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -107,9 +113,7 @@ function AppRoutes() {
             </PublicRoute>
           </Route>
           <Route path="/admin-login">
-            <PublicRoute>
-              <AdminLogin />
-            </PublicRoute>
+            <AdminLogin />
           </Route>
           <Route path="/test-auth">
             <TestAuth />
