@@ -708,6 +708,26 @@ export const useRemoveFromWhitelist = () => {
   });
 };
 
+// Hook to update whitelist
+export const useUpdateWhitelist = () => {
+  const convex = useConvex();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, ...data }: { id: string; [key: string]: any }) =>
+      convex.mutation(api.whitelist.updateWhitelistEntry, {
+        id: id as any,
+        ...data,
+      }),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["whitelist"] });
+      queryClient.invalidateQueries({
+        queryKey: ["whitelistItem", id],
+      });
+    },
+  });
+};
+
 // Hook to get access requests
 export const useAccessRequests = () => {
   const convex = useConvex();

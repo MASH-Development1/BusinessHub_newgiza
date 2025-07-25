@@ -58,6 +58,7 @@ import {
   useDeleteProfile,
   useWhitelist,
   useAddToWhitelist,
+  useUpdateWhitelist,
   useRemoveFromWhitelist,
   useAccessRequests,
   useUpdateAccessRequestStatus,
@@ -227,6 +228,21 @@ export default function AdminComplete() {
     phone: "",
   });
 
+  // New state variables for enhanced whitelist functionality
+  const [newEmail, setNewEmail] = useState("");
+  const [whitelistSearch, setWhitelistSearch] = useState("");
+
+  // Dialog states for whitelist edit
+  const [selectedWhitelistUser, setSelectedWhitelistUser] = useState<any>(null);
+  const [isWhitelistEditOpen, setIsWhitelistEditOpen] = useState(false);
+  const [editWhitelistForm, setEditWhitelistForm] = useState({
+    email: "",
+    name: "",
+    phone: "",
+    unit: "",
+    isActive: true,
+  });
+
   // Dialog states for job management
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isJobDetailsOpen, setIsJobDetailsOpen] = useState(false);
@@ -306,6 +322,7 @@ export default function AdminComplete() {
   const updateApplicationStatusMutation = useUpdateApplicationStatus();
 
   const addToWhitelistMutation = useAddToWhitelist();
+  const updateWhitelistMutation = useUpdateWhitelist();
   const removeFromWhitelistMutation = useRemoveFromWhitelist();
   const updateAccessRequestStatusMutation = useUpdateAccessRequestStatus();
 
@@ -566,6 +583,111 @@ export default function AdminComplete() {
           toast({
             title: "Error",
             description: "Failed to add email to whitelist",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  // New handler functions for enhanced whitelist functionality
+  const addToWhitelist = () => {
+    if (!newEmail.trim()) return;
+
+    addToWhitelistMutation.mutate(
+      {
+        email: newEmail,
+        addedBy: user?.email || "admin",
+      },
+      {
+        onSuccess: () => {
+          setNewEmail("");
+          toast({
+            title: "Success",
+            description: "Email added to whitelist successfully!",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to add email to whitelist",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  const handleWhitelistSearchChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setWhitelistSearch(e.target.value);
+  };
+
+  const editUser = (item: EmailWhitelist) => {
+    // Set the selected user and populate the edit form
+    setSelectedWhitelistUser(item);
+    setEditWhitelistForm({
+      email: item.email,
+      name: item.name || "",
+      unit: item.unit || "",
+      phone: item.phone || "",
+      isActive: item.isActive !== false, // Default to true if undefined
+    });
+    setIsWhitelistEditOpen(true);
+  };
+
+  const removeUser = (id: string) => {
+    removeFromWhitelistMutation.mutate(id, {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Email removed from whitelist successfully!",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to remove email from whitelist",
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const handleEditWhitelistSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWhitelistUser) return;
+
+    updateWhitelistMutation.mutate(
+      {
+        id: selectedWhitelistUser.id,
+        email: editWhitelistForm.email,
+        name: editWhitelistForm.name || undefined,
+        unit: editWhitelistForm.unit || undefined,
+        phone: editWhitelistForm.phone || undefined,
+        is_active: editWhitelistForm.isActive,
+      },
+      {
+        onSuccess: () => {
+          setIsWhitelistEditOpen(false);
+          setSelectedWhitelistUser(null);
+          setEditWhitelistForm({
+            email: "",
+            name: "",
+            phone: "",
+            unit: "",
+            isActive: true,
+          });
+          toast({
+            title: "Success",
+            description: "User information updated successfully!",
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Error",
+            description: "Failed to update user information",
             variant: "destructive",
           });
         },
@@ -2277,152 +2399,155 @@ export default function AdminComplete() {
 
           {/* Whitelist Tab */}
           <TabsContent value="whitelist" className="space-y-6">
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Manage Email Whitelist
+                <CardTitle className="text-gray-900 dark:text-white">
+                  Email Whitelist Management
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button className="mb-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Email to Whitelist
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Email to Whitelist</DialogTitle>
-                    </DialogHeader>
-                    <form
-                      onSubmit={handleWhitelistSubmit}
-                      className="space-y-4"
+                <div className="space-y-4 mb-4">
+                  {/* Add new email */}
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter email address"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      onKeyUp={(e) => e.key === "Enter" && addToWhitelist()}
+                      className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600"
+                    />
+                    <Button
+                      onClick={addToWhitelist}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
-                      <div>
-                        <Label htmlFor="whitelist-email">Email</Label>
-                        <Input
-                          id="whitelist-email"
-                          type="email"
-                          value={whitelistForm.email}
-                          onChange={(e) =>
-                            setWhitelistForm({
-                              ...whitelistForm,
-                              email: e.target.value,
-                            })
-                          }
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="whitelist-name">Name (Optional)</Label>
-                        <Input
-                          id="whitelist-name"
-                          value={whitelistForm.name}
-                          onChange={(e) =>
-                            setWhitelistForm({
-                              ...whitelistForm,
-                              name: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="whitelist-unit">
-                            Unit (Optional)
-                          </Label>
-                          <Input
-                            id="whitelist-unit"
-                            value={whitelistForm.unit}
-                            onChange={(e) =>
-                              setWhitelistForm({
-                                ...whitelistForm,
-                                unit: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="whitelist-phone">
-                            Phone (Optional)
-                          </Label>
-                          <Input
-                            id="whitelist-phone"
-                            value={whitelistForm.phone}
-                            onChange={(e) =>
-                              setWhitelistForm({
-                                ...whitelistForm,
-                                phone: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                      <Button
-                        type="submit"
-                        disabled={addToWhitelistMutation.isPending}
-                      >
-                        {addToWhitelistMutation.isPending
-                          ? "Adding..."
-                          : "Add to Whitelist"}
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Email
+                    </Button>
+                  </div>
 
-                <div className="space-y-4">
-                  {whitelist.map((item) => (
-                    <Card key={item.id}>
-                      <CardContent className="p-4">
+                  {/* Search whitelist */}
+                  <div className="relative">
+                    <Input
+                      placeholder="Search by email, name, or unit..."
+                      value={whitelistSearch}
+                      onChange={handleWhitelistSearchChange}
+                      className="bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 pl-10 pr-10"
+                    />
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <svg
+                        className="h-4 w-4 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                    {whitelistSearch && (
+                      <button
+                        onClick={() => setWhitelistSearch("")}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {whitelist
+                    .filter((item) => {
+                      if (!whitelistSearch) return true;
+                      const searchLower = whitelistSearch.toLowerCase();
+                      return (
+                        item.email.toLowerCase().includes(searchLower) ||
+                        (item.name &&
+                          item.name.toLowerCase().includes(searchLower)) ||
+                        (item.unit &&
+                          item.unit.toLowerCase().includes(searchLower))
+                      );
+                    })
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 p-4"
+                      >
                         <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="font-semibold">{item.email}</h3>
-                            {item.name && (
-                              <p className="text-sm text-muted-foreground">
-                                {item.name}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {item.email}
                               </p>
+                              <Badge
+                                variant="outline"
+                                className="text-green-700 border-green-300 bg-green-50"
+                              >
+                                Approved
+                              </Badge>
+                            </div>
+
+                            {item.name && (
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2 text-sm">
+                                <div>
+                                  <span className="text-gray-600 dark:text-gray-400">
+                                    Full Name:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 dark:text-white font-medium">
+                                    {item.name}
+                                  </span>
+                                </div>
+                                {item.unit && (
+                                  <div>
+                                    <span className="text-gray-600 dark:text-gray-400">
+                                      Unit:
+                                    </span>
+                                    <span className="ml-2 text-gray-900 dark:text-white font-medium">
+                                      {item.unit}
+                                    </span>
+                                  </div>
+                                )}
+                                {item.phone && (
+                                  <div>
+                                    <span className="text-gray-600 dark:text-gray-400">
+                                      Mobile:
+                                    </span>
+                                    <span className="ml-2 text-gray-900 dark:text-white font-medium">
+                                      {item.phone}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
                             )}
-                            {item.unit && (
-                              <p className="text-sm">{item.unit}</p>
-                            )}
-                            <Badge
-                              variant={item.isActive ? "default" : "secondary"}
-                            >
-                              {item.isActive ? "Active" : "Inactive"}
-                            </Badge>
+
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Added to whitelist: {formatDate(item.createdAt)}
+                            </p>
                           </div>
-                          <div className="flex gap-2">
+
+                          <div className="flex gap-2 ml-4">
                             <Button
-                              variant="outline"
+                              onClick={() => editUser(item)}
                               size="sm"
-                              onClick={() =>
-                                removeFromWhitelistMutation.mutate(item.id, {
-                                  onSuccess: () =>
-                                    toast({
-                                      title: "Success",
-                                      description:
-                                        "Email removed from whitelist successfully!",
-                                    }),
-                                  onError: () =>
-                                    toast({
-                                      title: "Error",
-                                      description:
-                                        "Failed to remove email from whitelist",
-                                      variant: "destructive",
-                                    }),
-                                })
-                              }
-                              disabled={removeFromWhitelistMutation.isPending}
+                              variant="outline"
+                              className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => removeUser(item.id)}
+                              size="sm"
+                              variant="destructive"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </div>
+                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -4379,6 +4504,125 @@ export default function AdminComplete() {
                   type="button"
                   variant="outline"
                   onClick={() => setIsInternshipEditOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Whitelist User Dialog */}
+        <Dialog
+          open={isWhitelistEditOpen}
+          onOpenChange={setIsWhitelistEditOpen}
+        >
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                Edit User: {selectedWhitelistUser?.email}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleEditWhitelistSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="edit-whitelist-name">Name</Label>
+                <Input
+                  id="edit-whitelist-name"
+                  value={editWhitelistForm.name}
+                  onChange={(e) =>
+                    setEditWhitelistForm({
+                      ...editWhitelistForm,
+                      name: e.target.value,
+                    })
+                  }
+                  placeholder="Ahmed Elshawarbi"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-whitelist-email">Email</Label>
+                <Input
+                  id="edit-whitelist-email"
+                  type="email"
+                  value={editWhitelistForm.email}
+                  onChange={(e) =>
+                    setEditWhitelistForm({
+                      ...editWhitelistForm,
+                      email: e.target.value,
+                    })
+                  }
+                  placeholder="aashawarbi@hotmail.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-whitelist-phone">Phone</Label>
+                <Input
+                  id="edit-whitelist-phone"
+                  type="tel"
+                  value={editWhitelistForm.phone}
+                  onChange={(e) =>
+                    setEditWhitelistForm({
+                      ...editWhitelistForm,
+                      phone: e.target.value,
+                    })
+                  }
+                  placeholder="01009400004"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-whitelist-unit">Unit Number</Label>
+                <Input
+                  id="edit-whitelist-unit"
+                  value={editWhitelistForm.unit}
+                  onChange={(e) =>
+                    setEditWhitelistForm({
+                      ...editWhitelistForm,
+                      unit: e.target.value,
+                    })
+                  }
+                  placeholder="Building C4, Apt. 03, Carnell Park"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="edit-whitelist-active"
+                  checked={editWhitelistForm.isActive}
+                  onChange={(e) =>
+                    setEditWhitelistForm({
+                      ...editWhitelistForm,
+                      isActive: e.target.checked,
+                    })
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <Label
+                  htmlFor="edit-whitelist-active"
+                  className="text-sm font-medium"
+                >
+                  Active User
+                </Label>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="submit"
+                  disabled={updateWhitelistMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  {updateWhitelistMutation.isPending
+                    ? "Saving..."
+                    : "Save Changes"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsWhitelistEditOpen(false)}
                 >
                   Cancel
                 </Button>

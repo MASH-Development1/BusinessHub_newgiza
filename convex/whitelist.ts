@@ -57,14 +57,30 @@ export const removeFromWhitelist = mutation({
 export const updateWhitelistEntry = mutation({
   args: {
     id: v.id("email_whitelist"),
+    email: v.optional(v.string()),
     name: v.optional(v.string()),
     unit: v.optional(v.string()),
     phone: v.optional(v.string()),
     is_active: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    const { id, email, ...updates } = args;
+
+    // If email is being updated, check if the new email already exists
+    if (email) {
+      const existingEmail = await ctx.db
+        .query("email_whitelist")
+        .withIndex("email", (q) => q.eq("email", email.toLowerCase()))
+        .first();
+
+      // Only throw error if the existing email belongs to a different user
+      if (existingEmail && existingEmail._id !== id) {
+        throw new Error("Email already exists in whitelist");
+      }
+    }
+
     await ctx.db.patch(id, {
+      ...(email && { email: email.toLowerCase() }),
       ...updates,
       updated_at: new Date().toISOString(),
     });
