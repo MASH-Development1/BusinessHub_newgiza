@@ -23,6 +23,7 @@ export default defineSchema({
     cover_letter: v.optional(v.union(v.string(), v.null())),
     cv_file_name: v.optional(v.union(v.string(), v.null())),
     cv_file_path: v.optional(v.union(v.string(), v.null())),
+    cv_storage_id: v.optional(v.id("_storage")),
     job_id: v.optional(v.union(v.id("jobs"), v.null())),
     internship_id: v.optional(v.union(v.id("internships"), v.null())),
     status: v.string(), // Set default in mutation logic
