@@ -50,6 +50,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { CVCard } from "@/components/CVCard";
 import { CVDownloadButton } from "@/components/CVDownloadButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 const editCvSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -73,17 +74,13 @@ export default function CvShowcase() {
   const { toast } = useToast();
 
   const { data: cvs = [], isLoading } = useCvShowcase();
-
-  const { data: currentUser } = useQuery<any>({
-    queryKey: ["/api/auth/me"],
-    retry: false,
-  });
+  const { user: currentUser, isAdmin } = useAuth();
 
   const updateCvMutation = useUpdateCvShowcase();
 
   const canEditCv = (cv: CvShowcase) => {
     if (!currentUser) return false;
-    return currentUser.isAdmin || currentUser.email === cv.email;
+    return isAdmin || currentUser.email === cv.email;
   };
 
   // Calculate CV counts for each section
