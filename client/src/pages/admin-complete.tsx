@@ -1118,14 +1118,14 @@ export default function AdminComplete() {
     "under_review",
     "interview",
     "accepted",
-    "rejected"
+    "rejected",
   ];
   const statusLabels: Record<string, string> = {
     submitted: "Submitted",
     under_review: "Under Review",
     interview: "Interview",
     accepted: "Accepted",
-    rejected: "Rejected"
+    rejected: "Rejected",
   };
 
   return (
@@ -2889,7 +2889,9 @@ export default function AdminComplete() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-black" />
-                  <p className="text-black">Application Management ({applications.length} total)</p>
+                  <p className="text-black">
+                    Application Management ({applications.length} total)
+                  </p>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -2899,16 +2901,18 @@ export default function AdminComplete() {
                     className="flex-1 min-w-[220px]"
                     placeholder="Search by name or email..."
                     value={appSearch}
-                    onChange={e => setAppSearch(e.target.value)}
+                    onChange={(e) => setAppSearch(e.target.value)}
                   />
                   <Select value={appStatus} onValueChange={setAppStatus}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {applicationStatuses.map(status => (
+                      {applicationStatuses.map((status) => (
                         <SelectItem key={status} value={status}>
-                          {status === "All Status" ? "All Status" : statusLabels[status]}
+                          {status === "All Status"
+                            ? "All Status"
+                            : statusLabels[status]}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -2917,7 +2921,7 @@ export default function AdminComplete() {
                 {/* Filtered Applications List */}
                 <div className="space-y-6 max-h-[700px] overflow-y-auto">
                   {applications
-                    .filter(app => {
+                    .filter((app) => {
                       // Search filter
                       const q = appSearch.toLowerCase();
                       const matchesSearch =
@@ -2925,56 +2929,145 @@ export default function AdminComplete() {
                         app.applicantName?.toLowerCase().includes(q) ||
                         app.applicantEmail?.toLowerCase().includes(q);
                       // Status filter
-                      const matchesStatus = appStatus === "All Status" || (app.status || "submitted") === appStatus;
+                      const matchesStatus =
+                        appStatus === "All Status" ||
+                        (app.status || "submitted") === appStatus;
                       return matchesSearch && matchesStatus;
                     })
-                    .map(app => {
+                    .map((app) => {
                       const isJob = !!app.jobId;
                       const isInternship = !!app.internshipId;
                       const statusValue = app.status || "submitted";
                       return (
-                        <Card key={app.id} className="bg-white border border-gray-200 shadow-sm">
+                        <Card
+                          key={app.id}
+                          className="bg-white border border-gray-200 shadow-sm"
+                        >
                           <CardContent className="p-6">
                             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                               <div className="flex-1 min-w-[250px]">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-semibold text-lg text-gray-900">{app.applicantName}</span>
-                                  <Badge variant="secondary" className="text-xs px-2 py-0.5">{statusLabels[statusValue] || statusValue}</Badge>
+                                  <span className="font-semibold text-lg text-gray-900">
+                                    {app.applicantName}
+                                  </span>
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs px-2 py-0.5"
+                                  >
+                                    {statusLabels[statusValue] || statusValue}
+                                  </Badge>
                                 </div>
                                 <div className="text-sm text-gray-700 mb-1">
-                                  <span className="font-medium">Email:</span> <a href={`mailto:${app.applicantEmail}`} className="text-blue-600 underline">{app.applicantEmail}</a>
+                                  <span className="font-medium">Email:</span>{" "}
+                                  <a
+                                    href={`mailto:${app.applicantEmail}`}
+                                    className="text-blue-600 underline"
+                                  >
+                                    {app.applicantEmail}
+                                  </a>
                                   {app.applicantPhone && (
-                                    <span className="ml-4"><span className="font-medium">Phone:</span> <a href={`tel:${app.applicantPhone}`} className="text-green-700 underline">{app.applicantPhone}</a></span>
+                                    <span className="ml-4">
+                                      <span className="font-medium">
+                                        Phone:
+                                      </span>{" "}
+                                      <a
+                                        href={`tel:${app.applicantPhone}`}
+                                        className="text-green-700 underline"
+                                      >
+                                        {app.applicantPhone}
+                                      </a>
+                                    </span>
                                   )}
                                 </div>
                                 <div className="text-sm text-gray-700 mb-1">
-                                  <span className="font-medium">Position:</span> {isJob ? "Job Application" : isInternship ? "Internship Application" : "N/A"}
+                                  <span className="font-medium">Position:</span>{" "}
+                                  {isJob
+                                    ? "Job Application"
+                                    : isInternship
+                                      ? "Internship Application"
+                                      : "N/A"}
                                 </div>
                                 <div className="text-xs text-gray-500 mb-2">
-                                  <span className="font-medium">Applied:</span> {formatDate(app.createdAt)}
+                                  <span className="font-medium">Applied:</span>{" "}
+                                  {formatDate(app.createdAt)}
                                 </div>
                                 {app.coverLetter && (
                                   <div className="bg-gray-50 border rounded p-2 text-sm text-gray-800 mb-2">
-                                    <span className="font-medium text-gray-600">Cover Letter:</span>
-                                    <div className="mt-1 whitespace-pre-line">{app.coverLetter}</div>
+                                    <span className="font-medium text-gray-600">
+                                      Cover Letter:
+                                    </span>
+                                    <div className="mt-1 whitespace-pre-line">
+                                      {app.coverLetter}
+                                    </div>
                                   </div>
                                 )}
                               </div>
                               <div className="flex flex-col gap-2 min-w-[180px]">
-                                <Select value={statusValue} onValueChange={status => updateApplicationStatusMutation.mutate({ id: app.id, status })}>
+                                <Select
+                                  value={statusValue}
+                                  onValueChange={(status) =>
+                                    updateApplicationStatusMutation.mutate({
+                                      id: app.id,
+                                      status,
+                                    })
+                                  }
+                                >
                                   <SelectTrigger>
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    {applicationStatuses.filter(s => s !== "All Status").map(status => (
-                                      <SelectItem key={status} value={status}>{statusLabels[status]}</SelectItem>
-                                    ))}
+                                    {applicationStatuses
+                                      .filter((s) => s !== "All Status")
+                                      .map((status) => (
+                                        <SelectItem key={status} value={status}>
+                                          {statusLabels[status]}
+                                        </SelectItem>
+                                      ))}
                                   </SelectContent>
                                 </Select>
-                                <Button size="sm" variant="outline" className="border-green-400 text-green-700" onClick={() => app.cvFilePath && window.open(app.cvFilePath, "_blank")}>View CV</Button>
-                                <Button size="sm" variant="outline" className="border-blue-400 text-blue-700" onClick={() => app.cvFilePath && window.open(app.cvFilePath, "_blank")}>Download</Button>
-                                <Button size="sm" variant="outline" className="border-purple-400 text-purple-700" onClick={() => window.open(`mailto:${app.applicantEmail}`)}>Email</Button>
-                                <Button size="sm" variant="outline" className="border-orange-400 text-orange-700" onClick={() => app.applicantPhone && window.open(`tel:${app.applicantPhone}`)}>Call</Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-green-400 text-green-700"
+                                  onClick={() =>
+                                    app.cvFilePath &&
+                                    window.open(app.cvFilePath, "_blank")
+                                  }
+                                >
+                                  View CV
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-blue-400 text-blue-700"
+                                  onClick={() =>
+                                    app.cvFilePath &&
+                                    window.open(app.cvFilePath, "_blank")
+                                  }
+                                >
+                                  Download
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-purple-400 text-purple-700"
+                                  onClick={() =>
+                                    window.open(`mailto:${app.applicantEmail}`)
+                                  }
+                                >
+                                  Email
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-orange-400 text-orange-700"
+                                  onClick={() =>
+                                    app.applicantPhone &&
+                                    window.open(`tel:${app.applicantPhone}`)
+                                  }
+                                >
+                                  Call
+                                </Button>
                               </div>
                             </div>
                           </CardContent>
@@ -3202,74 +3295,87 @@ export default function AdminComplete() {
           </TabsContent>
           {/* Directory Tab */}
           <TabsContent value="directory" className="space-y-6">
-            <Card>
+            <Card className="bg-white border-gray-200">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
+                <CardTitle className="text-gray-900">
                   Professional Directory ({profiles.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-4 h-[500px] overflow-y-auto">
-                    {profiles.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-500">
-                          No businesses in directory yet
-                        </p>
-                      </div>
-                    ) : (
-                      profiles.map((profile) => (
-                        <div
-                          key={profile.id}
-                          className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <h3 className="font-semibold">{profile.name}</h3>
-                              <p className="text-sm text-gray-600">
-                                {profile.contact}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                {profile.title}
-                              </p>
-                              {profile.bio && (
-                                <p className="text-sm text-gray-500 mt-2">
-                                  {profile.bio}
-                                </p>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {profiles.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500">No profiles created yet</p>
+                    </div>
+                  ) : (
+                    profiles.map((profile) => (
+                      <div
+                        key={profile.id}
+                        className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                              {profile.name}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                              {profile.contact}
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              {profile.company && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-gray-400 dark:border-gray-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600"
+                                >
+                                  {profile.company}
+                                </Badge>
                               )}
-                              <p className="text-sm text-gray-500">
-                                Added: {formatDate(profile.createdAt)}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  // View profile details logic
-                                }}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() =>
-                                  deleteProfileMutation.mutate(profile.id)
+                              {profile.title && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-gray-400 dark:border-gray-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600"
+                                >
+                                  {profile.title}
+                                </Badge>
+                              )}
+                              {profile.industry && (
+                                <Badge
+                                  variant="outline"
+                                  className="border-gray-400 dark:border-gray-500 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600"
+                                >
+                                  {profile.industry}
+                                </Badge>
+                              )}
+                              <Badge
+                                variant={
+                                  profile.isVisible ? "default" : "secondary"
+                                }
+                                className={
+                                  profile.isVisible
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
                                 }
                               >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </Button>
+                                {profile.isVisible ? "Visible" : "Hidden"}
+                              </Badge>
                             </div>
                           </div>
+                          <div className="flex gap-2 ml-4">
+                            <Button
+                              onClick={() =>
+                                deleteProfileMutation.mutate(profile.id)
+                              }
+                              size="sm"
+                              variant="destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                      ))
-                    )}
-                  </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
