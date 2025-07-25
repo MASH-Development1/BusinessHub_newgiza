@@ -447,13 +447,34 @@ export const useUpdateCvShowcase = () => {
         let cvStorageId = null;
 
         if (file) {
-          // Generate upload URL
+          // First, get the current CV to check if there's an existing file to delete
+          const currentCv = await convex.query(api.cvShowcase.getCv, {
+            id: id as any,
+          });
+
+          // Delete old CV file if it exists
+          if (currentCv?.cv_storage_id) {
+            try {
+              await convex.mutation(api.files.deleteFile, {
+                storageId: currentCv.cv_storage_id,
+              });
+              console.log("✅ Old CV file deleted successfully");
+            } catch (error) {
+              console.warn(
+                "⚠️ Failed to delete old CV file, continuing with upload:",
+                error
+              );
+              // Continue with upload even if deletion fails
+            }
+          }
+
+          // Generate upload URL for new file
           const uploadUrl = await convex.action(
             api.files.generateUploadUrl,
             {}
           );
 
-          // Upload file to Convex storage
+          // Upload new file to Convex storage
           const result = await fetch(uploadUrl, {
             method: "POST",
             body: file,

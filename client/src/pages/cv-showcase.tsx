@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -244,9 +244,21 @@ export default function CvShowcase() {
           cv={editingCv}
           isOpen={!!editingCv}
           onClose={() => setEditingCv(null)}
-          onSave={(data) =>
-            updateCvMutation.mutateAsync({ id: editingCv.id.toString(), data })
-          }
+          onSave={(data) => {
+            if (data instanceof FormData) {
+              // Handle FormData (includes file upload)
+              updateCvMutation.mutateAsync({
+                id: editingCv.id.toString(),
+                data,
+              });
+            } else {
+              // Handle regular data object
+              updateCvMutation.mutateAsync({
+                id: editingCv.id.toString(),
+                data,
+              });
+            }
+          }}
           isLoading={updateCvMutation.isPending}
         />
       )}
@@ -358,11 +370,11 @@ function EditCvDialog({
   cv: CvShowcase;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: EditCvData) => void;
+  onSave: (data: EditCvData | FormData) => void;
   isLoading: boolean;
 }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const form = useForm<EditCvData>({
     resolver: zodResolver(editCvSchema),
@@ -378,53 +390,23 @@ function EditCvDialog({
     },
   });
 
-  const updateWithFileMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      console.log("🔄 Attempting file upload CV update...");
-      console.log("📋 Document cookies:", document.cookie);
-      console.log("📝 FormData entries:");
-      formData.forEach((value, key) => {
-        console.log(`  ${key}:`, value);
-      });
-
-      const response = await fetch(`/api/cv-showcase/${cv.id}`, {
-        method: "PUT",
-        body: formData,
-        credentials: "include", // Include session cookies
-      });
-
-      console.log("📡 Response status:", response.status);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Error response:", errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cv-showcase"] });
-      onClose();
-      setSelectedFile(null);
-    },
-    onError: (error: any) => {
-      console.error("Error updating CV with file:", error);
-      // Show detailed error to user
-      alert(`Failed to update CV: ${error.message || "Unknown error"}`);
-    },
-  });
-
   const handleSubmit = (data: EditCvData) => {
     if (selectedFile) {
-      // If a new file is selected, use multipart form data
+      // If a file is selected, create FormData
       const formData = new FormData();
+
+      // Add all form fields to FormData
       Object.entries(data).forEach(([key, value]) => {
         if (value) formData.append(key, value);
       });
+
+      // Add the file
       formData.append("cv", selectedFile);
-      updateWithFileMutation.mutate(formData);
+
+      // Send FormData to trigger file upload
+      onSave(formData);
     } else {
-      // If no file, use regular JSON update
+      // No file selected, send regular data
       onSave(data);
     }
   };
