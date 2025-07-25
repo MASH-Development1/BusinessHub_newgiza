@@ -583,7 +583,10 @@ export const useCreateJobApplication = () => {
         let cvStorageId = null;
 
         if (file) {
-          const uploadUrl = await convex.action(api.files.generateUploadUrl, {});
+          const uploadUrl = await convex.action(
+            api.files.generateUploadUrl,
+            {}
+          );
           const result = await fetch(uploadUrl, {
             method: "POST",
             body: file,
@@ -605,10 +608,16 @@ export const useCreateJobApplication = () => {
         }
 
         const mappedData = mapApplicationFieldNames(appData);
-        return convex.mutation(api.applications.createJobApplication, mappedData);
+        return convex.mutation(
+          api.applications.createJobApplication,
+          mappedData
+        );
       } else {
         const mappedData = mapApplicationFieldNames(data);
-        return convex.mutation(api.applications.createJobApplication, mappedData);
+        return convex.mutation(
+          api.applications.createJobApplication,
+          mappedData
+        );
       }
     },
     onSuccess: () => {
@@ -629,7 +638,10 @@ export const useCreateInternshipApplication = () => {
         let cvStorageId = null;
 
         if (file) {
-          const uploadUrl = await convex.action(api.files.generateUploadUrl, {});
+          const uploadUrl = await convex.action(
+            api.files.generateUploadUrl,
+            {}
+          );
           const result = await fetch(uploadUrl, {
             method: "POST",
             body: file,
@@ -651,10 +663,16 @@ export const useCreateInternshipApplication = () => {
         }
 
         const mappedData = mapApplicationFieldNames(appData);
-        return convex.mutation(api.applications.createInternshipApplication, mappedData);
+        return convex.mutation(
+          api.applications.createInternshipApplication,
+          mappedData
+        );
       } else {
         const mappedData = mapApplicationFieldNames(data);
-        return convex.mutation(api.applications.createInternshipApplication, mappedData);
+        return convex.mutation(
+          api.applications.createInternshipApplication,
+          mappedData
+        );
       }
     },
     onSuccess: () => {
@@ -987,5 +1005,18 @@ export const useCvFileUrl = (cvId: Id<"cv_showcase"> | null) => {
       return convex.query(api.cvShowcase.getCvFileUrl, { id: cvId });
     },
     enabled: !!cvId,
+  });
+};
+
+// Hook to get file URL from storage ID
+export const useFileUrl = (storageId: Id<"_storage"> | null) => {
+  const convex = useConvex();
+  return useQuery({
+    queryKey: ["fileUrl", storageId],
+    queryFn: async () => {
+      if (!storageId) return null;
+      return convex.query(api.files.getFileUrl, { storageId });
+    },
+    enabled: !!storageId,
   });
 };

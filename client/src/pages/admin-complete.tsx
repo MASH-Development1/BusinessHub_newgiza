@@ -70,7 +70,9 @@ import {
   usePermanentlyDeleteRemovedInternship,
   useMatchingCVsForJob,
   useMatchingJobsForCV,
-  useCvShowcase, useCvFileUrl,
+  useCvShowcase,
+  useCvFileUrl,
+  useFileUrl,
 } from "@/lib/convexApi";
 import {
   Job,
@@ -1170,11 +1172,172 @@ export default function AdminComplete() {
     );
   };
 
-  // Helper to get CV file URL from storage
-  // const getCvFileUrl = async (cvStorageId: string) => {
-  //   if (!cvStorageId) return null;
-  //   return await convex.query(api.files.getFileUrl, { storageId: cvStorageId as Id<"_storage"> });
-  // };
+  // Application Card Component with proper file URL handling
+  const ApplicationCard = ({
+    app,
+    updateApplicationStatusMutation,
+    statusLabels,
+    applicationStatuses,
+  }: {
+    app: any;
+    updateApplicationStatusMutation: any;
+    statusLabels: any;
+    applicationStatuses: string[];
+  }) => {
+    const { data: cvFileUrl } = useFileUrl(app.cvStorageId);
+    const isJob = !!app.jobId;
+    const isInternship = !!app.internshipId;
+    const statusValue = app.status || "submitted";
+
+    // Function to download the CV file
+    const downloadCV = async () => {
+      if (!cvFileUrl) return;
+
+      try {
+        const response = await fetch(cvFileUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download =
+          app.cvFileName || `CV_${app.applicantName?.replace(/\s+/g, "_")}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error("Download failed:", error);
+        // Fallback to opening in new tab if download fails
+        window.open(cvFileUrl, "_blank");
+      }
+    };
+
+    return (
+      <Card className="bg-white border border-gray-200 shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div className="flex-1 min-w-[250px]">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-semibold text-lg text-gray-900">
+                  {app.applicantName}
+                </span>
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  {statusLabels[statusValue] || statusValue}
+                </Badge>
+              </div>
+              <div className="text-sm text-gray-700 mb-1">
+                <span className="font-medium">Email:</span>{" "}
+                <a
+                  href={`mailto:${app.applicantEmail}`}
+                  className="text-blue-600 underline"
+                >
+                  {app.applicantEmail}
+                </a>
+                {app.applicantPhone && (
+                  <span className="ml-4">
+                    <span className="font-medium">Phone:</span>{" "}
+                    <a
+                      href={`tel:${app.applicantPhone}`}
+                      className="text-green-700 underline"
+                    >
+                      {app.applicantPhone}
+                    </a>
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-gray-700 mb-1">
+                <span className="font-medium">Position:</span>{" "}
+                {isJob
+                  ? "Job Application"
+                  : isInternship
+                    ? "Internship Application"
+                    : "N/A"}
+              </div>
+              <div className="text-xs text-gray-500 mb-2">
+                <span className="font-medium">Applied:</span>{" "}
+                {formatDate(app.createdAt)}
+              </div>
+              {app.coverLetter && (
+                <div className="bg-gray-50 border rounded p-2 text-sm text-gray-800 mb-2">
+                  <span className="font-medium text-gray-600">
+                    Cover Letter:
+                  </span>
+                  <div className="mt-1 whitespace-pre-line">
+                    {app.coverLetter}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-2 min-w-[180px]">
+              <Select
+                value={statusValue}
+                onValueChange={(status) =>
+                  updateApplicationStatusMutation.mutate({
+                    id: app.id,
+                    status,
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {applicationStatuses
+                    .filter((s) => s !== "All Status")
+                    .map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {statusLabels[status]}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-green-400 text-green-700"
+                onClick={() => cvFileUrl && window.open(cvFileUrl, "_blank")}
+                disabled={!cvFileUrl}
+              >
+                <Eye className="h-4 w-4 mr-1" />
+                View CV
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-blue-400 text-blue-700"
+                onClick={downloadCV}
+                disabled={!cvFileUrl}
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Download
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-purple-400 text-purple-700"
+                onClick={() => window.open(`mailto:${app.applicantEmail}`)}
+              >
+                <Mail className="h-4 w-4 mr-1" />
+                Email
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-orange-400 text-orange-700"
+                onClick={() =>
+                  app.applicantPhone && window.open(`tel:${app.applicantPhone}`)
+                }
+                disabled={!app.applicantPhone}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Call
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
@@ -2982,146 +3145,17 @@ export default function AdminComplete() {
                         (app.status || "submitted") === appStatus;
                       return matchesSearch && matchesStatus;
                     })
-                    .map((app) => {
-                      const isJob = !!app.jobId;
-                      const isInternship = !!app.internshipId;
-                      const statusValue = app.status || "submitted";
-                      return (
-                        <Card
-                          key={app.id}
-                          className="bg-white border border-gray-200 shadow-sm"
-                        >
-                          <CardContent className="p-6">
-                            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-                              <div className="flex-1 min-w-[250px]">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-semibold text-lg text-gray-900">
-                                    {app.applicantName}
-                                  </span>
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs px-2 py-0.5"
-                                  >
-                                    {statusLabels[statusValue] || statusValue}
-                                  </Badge>
-                                </div>
-                                <div className="text-sm text-gray-700 mb-1">
-                                  <span className="font-medium">Email:</span>{" "}
-                                  <a
-                                    href={`mailto:${app.applicantEmail}`}
-                                    className="text-blue-600 underline"
-                                  >
-                                    {app.applicantEmail}
-                                  </a>
-                                  {app.applicantPhone && (
-                                    <span className="ml-4">
-                                      <span className="font-medium">
-                                        Phone:
-                                      </span>{" "}
-                                      <a
-                                        href={`tel:${app.applicantPhone}`}
-                                        className="text-green-700 underline"
-                                      >
-                                        {app.applicantPhone}
-                                      </a>
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-sm text-gray-700 mb-1">
-                                  <span className="font-medium">Position:</span>{" "}
-                                  {isJob
-                                    ? "Job Application"
-                                    : isInternship
-                                      ? "Internship Application"
-                                      : "N/A"}
-                                </div>
-                                <div className="text-xs text-gray-500 mb-2">
-                                  <span className="font-medium">Applied:</span>{" "}
-                                  {formatDate(app.createdAt)}
-                                </div>
-                                {app.coverLetter && (
-                                  <div className="bg-gray-50 border rounded p-2 text-sm text-gray-800 mb-2">
-                                    <span className="font-medium text-gray-600">
-                                      Cover Letter:
-                                    </span>
-                                    <div className="mt-1 whitespace-pre-line">
-                                      {app.coverLetter}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex flex-col gap-2 min-w-[180px]">
-                                <Select
-                                  value={statusValue}
-                                  onValueChange={(status) =>
-                                    updateApplicationStatusMutation.mutate({
-                                      id: app.id,
-                                      status,
-                                    })
-                                  }
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {applicationStatuses
-                                      .filter((s) => s !== "All Status")
-                                      .map((status) => (
-                                        <SelectItem key={status} value={status}>
-                                          {statusLabels[status]}
-                                        </SelectItem>
-                                      ))}
-                                  </SelectContent>
-                                </Select>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-green-400 text-green-700"
-                                  onClick={() =>
-                                    app.cvFilePath &&
-                                    window.open(app.cvFilePath, "_blank")
-                                  }
-                                >
-                                  View CV
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-blue-400 text-blue-700"
-                                  onClick={() =>
-                                    app.cvFilePath &&
-                                    window.open(app.cvFilePath, "_blank")
-                                  }
-                                >
-                                  Download
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-purple-400 text-purple-700"
-                                  onClick={() =>
-                                    window.open(`mailto:${app.applicantEmail}`)
-                                  }
-                                >
-                                  Email
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-orange-400 text-orange-700"
-                                  onClick={() =>
-                                    app.applicantPhone &&
-                                    window.open(`tel:${app.applicantPhone}`)
-                                  }
-                                >
-                                  Call
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                    .map((app) => (
+                      <ApplicationCard
+                        key={app.id}
+                        app={app}
+                        updateApplicationStatusMutation={
+                          updateApplicationStatusMutation
+                        }
+                        statusLabels={statusLabels}
+                        applicationStatuses={applicationStatuses}
+                      />
+                    ))}
                 </div>
               </CardContent>
             </Card>
