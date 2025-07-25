@@ -142,6 +142,7 @@ export interface Application {
   coverLetter: string | null;
   cvFileName: string | null;
   cvFilePath: string | null;
+  cvStorageId?: string | null;
   jobId: number | null;
   internshipId: number | null;
   status: string;
@@ -338,6 +339,7 @@ export function adaptApplication(convexApplication: any): Application {
     coverLetter: convexApplication.cover_letter,
     cvFileName: convexApplication.cv_file_name,
     cvFilePath: convexApplication.cv_file_path,
+    cvStorageId: convexApplication.cv_storage_id,
     jobId: convexApplication.job_id,
     internshipId: convexApplication.internship_id,
     status: convexApplication.status,

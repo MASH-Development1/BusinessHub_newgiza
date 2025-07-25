@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,20 +48,6 @@ export default function Internships() {
   const [showDetails, setShowDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sectorFilter, setSectorFilter] = useState("");
-
-  const [applicationData, setApplicationData] = useState({
-    applicantName: "",
-    applicantEmail: "",
-    applicantPhone: "",
-    coverLetter: "",
-  });
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [applicationErrors, setApplicationErrors] = useState({
-    applicantName: "",
-    applicantEmail: "",
-    applicantPhone: "",
-    cv: "",
-  });
 
   // Fetch internships
   const { data: internships = [], isLoading } = useInternships();
@@ -130,19 +116,19 @@ export default function Internships() {
     setShowApplication(true);
     setShowDetails(false);
     // Reset form and errors when opening application modal
-    setApplicationData({
-      applicantName: "",
-      applicantEmail: "",
-      applicantPhone: "",
-      coverLetter: "",
-    });
-    setCvFile(null);
-    setApplicationErrors({
-      applicantName: "",
-      applicantEmail: "",
-      applicantPhone: "",
-      cv: "",
-    });
+    // setApplicationData({ // This line is removed as per the edit hint
+    //   applicantName: "",
+    //   applicantEmail: "",
+    //   applicantPhone: "",
+    //   coverLetter: "",
+    // });
+    // setCvFile(null); // This line is removed as per the edit hint
+    // setApplicationErrors({ // This line is removed as per the edit hint
+    //   applicantName: "",
+    //   applicantEmail: "",
+    //   applicantPhone: "",
+    //   cv: "",
+    // });
   };
 
   const handleViewDetails = (internship: Internship) => {
@@ -154,31 +140,31 @@ export default function Internships() {
   const handleCloseApplication = () => {
     setShowApplication(false);
     setSelectedInternship(null);
-    setApplicationData({
-      applicantName: "",
-      applicantEmail: "",
-      applicantPhone: "",
-      coverLetter: "",
-    });
-    setCvFile(null);
-    setApplicationErrors({
-      applicantName: "",
-      applicantEmail: "",
-      applicantPhone: "",
-      cv: "",
-    });
+    // setApplicationData({ // This line is removed as per the edit hint
+    //   applicantName: "",
+    //   applicantEmail: "",
+    //   applicantPhone: "",
+    //   coverLetter: "",
+    // });
+    // setCvFile(null); // This line is removed as per the edit hint
+    // setApplicationErrors({ // This line is removed as per the edit hint
+    //   applicantName: "",
+    //   applicantEmail: "",
+    //   applicantPhone: "",
+    //   cv: "",
+    // });
   };
 
   const handleSubmitApplication = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Reset errors
-    setApplicationErrors({
-      applicantName: "",
-      applicantEmail: "",
-      applicantPhone: "",
-      cv: "",
-    });
+    // setApplicationErrors({ // This line is removed as per the edit hint
+    //   applicantName: "",
+    //   applicantEmail: "",
+    //   applicantPhone: "",
+    //   cv: "",
+    // });
 
     // Validation
     let hasErrors = false;
@@ -224,7 +210,7 @@ export default function Internships() {
     }
 
     if (hasErrors) {
-      setApplicationErrors(newErrors);
+      // setApplicationErrors(newErrors); // This line is removed as per the edit hint
       return;
     }
 
@@ -234,7 +220,9 @@ export default function Internships() {
     formData.append("applicantEmail", applicationData.applicantEmail);
     formData.append("applicantPhone", applicationData.applicantPhone);
     formData.append("coverLetter", applicationData.coverLetter);
-    formData.append("cv", cvFile);
+    if (cvFile) {
+      formData.append("cv", cvFile);
+    }
 
     applyMutation.mutate(formData, {
       onSuccess: () => {
@@ -244,19 +232,19 @@ export default function Internships() {
         });
         setShowApplication(false);
         setSelectedInternship(null);
-        setApplicationData({
-          applicantName: "",
-          applicantEmail: "",
-          applicantPhone: "",
-          coverLetter: "",
-        });
-        setCvFile(null);
-        setApplicationErrors({
-          applicantName: "",
-          applicantEmail: "",
-          applicantPhone: "",
-          cv: "",
-        });
+        // setApplicationData({ // This line is removed as per the edit hint
+        //   applicantName: "",
+        //   applicantEmail: "",
+        //   applicantPhone: "",
+        //   coverLetter: "",
+        // });
+        // setCvFile(null); // This line is removed as per the edit hint
+        // setApplicationErrors({ // This line is removed as per the edit hint
+        //   applicantName: "",
+        //   applicantEmail: "",
+        //   applicantPhone: "",
+        //   cv: "",
+        // });
       },
       onError: (error: any) => {
         toast({
@@ -508,195 +496,296 @@ export default function Internships() {
     </Card>
   );
 
-  const ApplicationModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-white">
-              Apply for {selectedInternship?.title}
-            </h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCloseApplication}
-              className="border-gray-600 text-gray-300 hover:bg-gray-800"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
+  // Move ApplicationModal outside the main component
+  function ApplicationModal({
+    handleCloseApplication,
+    selectedInternship,
+    applyMutation,
+  }: {
+    handleCloseApplication: () => void;
+    selectedInternship: Internship | null;
+    applyMutation: any;
+  }) {
+    const [applicationData, setApplicationData] = useState({
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      coverLetter: "",
+    });
+    const [cvFile, setCvFile] = useState<File | null>(null);
+    const [applicationErrors, setApplicationErrors] = useState({
+      applicantName: "",
+      applicantEmail: "",
+      applicantPhone: "",
+      cv: "",
+    });
 
-          <form onSubmit={handleSubmitApplication} className="space-y-4">
-            <div>
-              <Label htmlFor="applicantName" className="text-white">
-                Full Name *
-              </Label>
-              <Input
-                id="applicantName"
-                value={applicationData.applicantName}
-                onChange={(e) => {
-                  setApplicationData((prev) => ({
-                    ...prev,
-                    applicantName: e.target.value,
-                  }));
-                  if (applicationErrors.applicantName) {
-                    setApplicationErrors((prev) => ({
-                      ...prev,
-                      applicantName: "",
-                    }));
-                  }
-                }}
-                required
-                className={`bg-gray-800 border-gray-600 text-white ${
-                  applicationErrors.applicantName ? "border-red-500" : ""
-                }`}
-              />
-              {applicationErrors.applicantName && (
-                <p className="text-red-400 text-sm mt-1">
-                  {applicationErrors.applicantName}
-                </p>
-              )}
-            </div>
+    // Optionally reset state when modal is opened/closed
+    useEffect(() => {
+      setApplicationData({
+        applicantName: "",
+        applicantEmail: "",
+        applicantPhone: "",
+        coverLetter: "",
+      });
+      setCvFile(null);
+      setApplicationErrors({
+        applicantName: "",
+        applicantEmail: "",
+        applicantPhone: "",
+        cv: "",
+      });
+    }, [selectedInternship]);
 
-            <div>
-              <Label htmlFor="applicantEmail" className="text-white">
-                Email *
-              </Label>
-              <Input
-                id="applicantEmail"
-                type="email"
-                value={applicationData.applicantEmail}
-                onChange={(e) => {
-                  setApplicationData((prev) => ({
-                    ...prev,
-                    applicantEmail: e.target.value,
-                  }));
-                  if (applicationErrors.applicantEmail) {
-                    setApplicationErrors((prev) => ({
-                      ...prev,
-                      applicantEmail: "",
-                    }));
-                  }
-                }}
-                required
-                className={`bg-gray-800 border-gray-600 text-white ${
-                  applicationErrors.applicantEmail ? "border-red-500" : ""
-                }`}
-              />
-              {applicationErrors.applicantEmail && (
-                <p className="text-red-400 text-sm mt-1">
-                  {applicationErrors.applicantEmail}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="applicantPhone" className="text-white">
-                Phone Number *
-              </Label>
-              <Input
-                id="applicantPhone"
-                value={applicationData.applicantPhone}
-                onChange={(e) => {
-                  setApplicationData((prev) => ({
-                    ...prev,
-                    applicantPhone: e.target.value,
-                  }));
-                  if (applicationErrors.applicantPhone) {
-                    setApplicationErrors((prev) => ({
-                      ...prev,
-                      applicantPhone: "",
-                    }));
-                  }
-                }}
-                required
-                className={`bg-gray-800 border-gray-600 text-white ${
-                  applicationErrors.applicantPhone ? "border-red-500" : ""
-                }`}
-              />
-              {applicationErrors.applicantPhone && (
-                <p className="text-red-400 text-sm mt-1">
-                  {applicationErrors.applicantPhone}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="cv" className="text-white">
-                Upload CV *
-              </Label>
-              <div className="mt-1">
-                <input
-                  id="cv"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(e) => {
-                    setCvFile(e.target.files?.[0] || null);
-                    if (applicationErrors.cv) {
-                      setApplicationErrors((prev) => ({ ...prev, cv: "" }));
-                    }
-                  }}
-                  className={`block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600 ${
-                    applicationErrors.cv ? "border border-red-500 rounded" : ""
-                  }`}
-                />
-              </div>
-              {applicationErrors.cv && (
-                <p className="text-red-400 text-sm mt-1">
-                  {applicationErrors.cv}
-                </p>
-              )}
-              {cvFile && (
-                <p className="text-sm text-green-400 mt-1">
-                  <FileText className="w-4 h-4 inline mr-1" />
-                  {cvFile.name}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="coverLetter" className="text-white">
-                Cover Letter
-              </Label>
-              <Textarea
-                id="coverLetter"
-                rows={4}
-                placeholder="Tell us why you're interested in this internship..."
-                value={applicationData.coverLetter}
-                onChange={(e) =>
-                  setApplicationData((prev) => ({
-                    ...prev,
-                    coverLetter: e.target.value,
-                  }))
-                }
-                className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
+    const handleSubmitApplication = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setApplicationErrors({
+        applicantName: "",
+        applicantEmail: "",
+        applicantPhone: "",
+        cv: "",
+      });
+      let hasErrors = false;
+      const newErrors = {
+        applicantName: "",
+        applicantEmail: "",
+        applicantPhone: "",
+        cv: "",
+      };
+      if (!applicationData.applicantName.trim()) {
+        newErrors.applicantName = "Full name is required";
+        hasErrors = true;
+      }
+      if (!applicationData.applicantEmail.trim()) {
+        newErrors.applicantEmail = "Email is required";
+        hasErrors = true;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(applicationData.applicantEmail)) {
+        newErrors.applicantEmail = "Please enter a valid email address";
+        hasErrors = true;
+      }
+      if (!applicationData.applicantPhone.trim()) {
+        newErrors.applicantPhone = "Phone number is required";
+        hasErrors = true;
+      }
+      if (!selectedInternship) {
+        // toast error if needed
+        return;
+      }
+      if (!cvFile) {
+        newErrors.cv = "CV is required";
+        hasErrors = true;
+      }
+      if (hasErrors) {
+        setApplicationErrors(newErrors);
+        return;
+      }
+      const formData = new FormData();
+      formData.append("internshipId", selectedInternship.id.toString());
+      formData.append("applicantName", applicationData.applicantName);
+      formData.append("applicantEmail", applicationData.applicantEmail);
+      formData.append("applicantPhone", applicationData.applicantPhone);
+      formData.append("coverLetter", applicationData.coverLetter);
+      if (cvFile) {
+        formData.append("cv", cvFile);
+      }
+      applyMutation.mutate(formData, {
+        onSuccess: () => {
+          handleCloseApplication();
+        },
+        onError: (error: any) => {
+          // toast error if needed
+        },
+      });
+    };
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div className="bg-gray-900 border border-gray-700 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-bold text-white">
+                Apply for {selectedInternship?.title}
+              </h2>
               <Button
-                type="submit"
-                disabled={applyMutation.isPending}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                {applyMutation.isPending
-                  ? "Submitting..."
-                  : "Submit Application"}
-              </Button>
-              <Button
-                type="button"
                 variant="outline"
+                size="sm"
                 onClick={handleCloseApplication}
                 className="border-gray-600 text-gray-300 hover:bg-gray-800"
               >
-                Cancel
+                <X className="w-4 h-4" />
               </Button>
             </div>
-          </form>
+            <form onSubmit={handleSubmitApplication} className="space-y-4">
+              <div>
+                <Label htmlFor="applicantName" className="text-white">
+                  Full Name *
+                </Label>
+                <Input
+                  id="applicantName"
+                  value={applicationData.applicantName}
+                  onChange={(e) => {
+                    setApplicationData((prev) => ({
+                      ...prev,
+                      applicantName: e.target.value,
+                    }));
+                    if (applicationErrors.applicantName) {
+                      setApplicationErrors((prev) => ({
+                        ...prev,
+                        applicantName: "",
+                      }));
+                    }
+                  }}
+                  required
+                  className={`bg-gray-800 border-gray-600 text-white ${
+                    applicationErrors.applicantName ? "border-red-500" : ""
+                  }`}
+                />
+                {applicationErrors.applicantName && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {applicationErrors.applicantName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="applicantEmail" className="text-white">
+                  Email *
+                </Label>
+                <Input
+                  id="applicantEmail"
+                  type="email"
+                  value={applicationData.applicantEmail}
+                  onChange={(e) => {
+                    setApplicationData((prev) => ({
+                      ...prev,
+                      applicantEmail: e.target.value,
+                    }));
+                    if (applicationErrors.applicantEmail) {
+                      setApplicationErrors((prev) => ({
+                        ...prev,
+                        applicantEmail: "",
+                      }));
+                    }
+                  }}
+                  required
+                  className={`bg-gray-800 border-gray-600 text-white ${
+                    applicationErrors.applicantEmail ? "border-red-500" : ""
+                  }`}
+                />
+                {applicationErrors.applicantEmail && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {applicationErrors.applicantEmail}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="applicantPhone" className="text-white">
+                  Phone Number *
+                </Label>
+                <Input
+                  id="applicantPhone"
+                  value={applicationData.applicantPhone}
+                  onChange={(e) => {
+                    setApplicationData((prev) => ({
+                      ...prev,
+                      applicantPhone: e.target.value,
+                    }));
+                    if (applicationErrors.applicantPhone) {
+                      setApplicationErrors((prev) => ({
+                        ...prev,
+                        applicantPhone: "",
+                      }));
+                    }
+                  }}
+                  required
+                  className={`bg-gray-800 border-gray-600 text-white ${
+                    applicationErrors.applicantPhone ? "border-red-500" : ""
+                  }`}
+                />
+                {applicationErrors.applicantPhone && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {applicationErrors.applicantPhone}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="cv" className="text-white">
+                  Upload CV *
+                </Label>
+                <div className="mt-1">
+                  <input
+                    id="cv"
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(e) => {
+                      setCvFile(e.target.files?.[0] || null);
+                      if (applicationErrors.cv) {
+                        setApplicationErrors((prev) => ({ ...prev, cv: "" }));
+                      }
+                    }}
+                    className={`block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600 ${
+                      applicationErrors.cv ? "border border-red-500 rounded" : ""
+                    }`}
+                  />
+                </div>
+                {applicationErrors.cv && (
+                  <p className="text-red-400 text-sm mt-1">
+                    {applicationErrors.cv}
+                  </p>
+                )}
+                {cvFile && (
+                  <p className="text-sm text-green-400 mt-1">
+                    <FileText className="w-4 h-4 inline mr-1" />
+                    {cvFile.name}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="coverLetter" className="text-white">
+                  Cover Letter
+                </Label>
+                <Textarea
+                  id="coverLetter"
+                  rows={4}
+                  placeholder="Tell us why you're interested in this internship..."
+                  value={applicationData.coverLetter}
+                  onChange={(e) =>
+                    setApplicationData((prev) => ({
+                      ...prev,
+                      coverLetter: e.target.value,
+                    }))
+                  }
+                  className="bg-gray-800 border-gray-600 text-white placeholder:text-gray-400"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  type="submit"
+                  disabled={applyMutation.isPending}
+                  className="bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  {applyMutation.isPending
+                    ? "Submitting..."
+                    : "Submit Application"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCloseApplication}
+                  className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -786,7 +875,13 @@ export default function Internships() {
         )}
 
         {/* Modals */}
-        {showApplication && <ApplicationModal />}
+        {showApplication && (
+          <ApplicationModal
+            handleCloseApplication={handleCloseApplication}
+            selectedInternship={selectedInternship}
+            applyMutation={applyMutation}
+          />
+        )}
         {showDetails && <DetailedViewModal />}
       </div>
     </div>

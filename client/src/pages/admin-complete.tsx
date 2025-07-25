@@ -70,8 +70,7 @@ import {
   usePermanentlyDeleteRemovedInternship,
   useMatchingCVsForJob,
   useMatchingJobsForCV,
-  useCvShowcase,
-  useCvFileUrl,
+  useCvShowcase, useCvFileUrl,
 } from "@/lib/convexApi";
 import {
   Job,
@@ -1170,6 +1169,12 @@ export default function AdminComplete() {
       </div>
     );
   };
+
+  // Helper to get CV file URL from storage
+  // const getCvFileUrl = async (cvStorageId: string) => {
+  //   if (!cvStorageId) return null;
+  //   return await convex.query(api.files.getFileUrl, { storageId: cvStorageId as Id<"_storage"> });
+  // };
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8">

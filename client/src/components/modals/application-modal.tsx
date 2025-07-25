@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import FileUpload from "@/components/ui/file-upload";
 import { X } from "lucide-react";
 import type { Job, Internship } from "@shared/schema";
+import { useCreateJobApplication, useCreateInternshipApplication } from "@/lib/convexApi";
 
 interface ApplicationModalProps {
   isOpen: boolean;
@@ -36,40 +37,9 @@ export default function ApplicationModal({
   
   const [cvFile, setCvFile] = useState<File | null>(null);
 
-  const applicationMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const endpoint = type === "job" 
-        ? `/api/applications/job/${job?.id}` 
-        : `/api/applications/internship/${internship?.id}`;
-      
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: data,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to submit application');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Application Submitted",
-        description: "Your application has been sent successfully. We'll review it and get back to you soon.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/applications"] });
-      handleClose();
-    },
-    onError: (error) => {
-      toast({
-        title: "Submission Failed",
-        description: "There was an error submitting your application. Please try again.",
-        variant: "destructive",
-      });
-      console.error('Application submission error:', error);
-    },
-  });
+  // Use the correct Convex mutation hook
+  const createJobApp = useCreateJobApplication();
+  const createInternshipApp = useCreateInternshipApplication();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,8 +68,47 @@ export default function ApplicationModal({
     submitData.append('applicantPhone', formData.applicantPhone);
     submitData.append('coverLetter', formData.coverLetter);
     submitData.append('cv', cvFile);
-
-    applicationMutation.mutate(submitData);
+    if (type === "job" && job?.id) {
+      submitData.append("jobId", job.id.toString());
+      createJobApp.mutate(submitData, {
+        onSuccess: () => {
+          toast({
+            title: "Application Submitted",
+            description: "Your application has been sent successfully. We'll review it and get back to you soon.",
+          });
+          queryClient.invalidateQueries({ queryKey: ["/api/applications"] });
+          handleClose();
+        },
+        onError: (error) => {
+          toast({
+            title: "Submission Failed",
+            description: "There was an error submitting your application. Please try again.",
+            variant: "destructive",
+          });
+          console.error('Application submission error:', error);
+        },
+      });
+    } else if (type === "internship" && internship?.id) {
+      submitData.append("internshipId", internship.id.toString());
+      createInternshipApp.mutate(submitData, {
+        onSuccess: () => {
+          toast({
+            title: "Application Submitted",
+            description: "Your application has been sent successfully. We'll review it and get back to you soon.",
+          });
+          queryClient.invalidateQueries({ queryKey: ["/api/applications"] });
+          handleClose();
+        },
+        onError: (error) => {
+          toast({
+            title: "Submission Failed",
+            description: "There was an error submitting your application. Please try again.",
+            variant: "destructive",
+          });
+          console.error('Application submission error:', error);
+        },
+      });
+    }
   };
 
   const handleClose = () => {
@@ -211,16 +220,16 @@ export default function ApplicationModal({
               variant="outline"
               className="flex-1"
               onClick={handleClose}
-              disabled={applicationMutation.isPending}
+              disabled={createJobApp.isPending || createInternshipApp.isPending}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="flex-1 bg-primary hover:bg-primary/90"
-              disabled={applicationMutation.isPending}
+              disabled={createJobApp.isPending || createInternshipApp.isPending}
             >
-              {applicationMutation.isPending ? "Submitting..." : "Submit Application"}
+              {createJobApp.isPending || createInternshipApp.isPending ? "Submitting..." : "Submit Application"}
             </Button>
           </div>
         </form>

@@ -22,17 +22,17 @@ export const getApplicationsByEmail = query({
 // Mutation to create a job application
 export const createJobApplication = mutation({
   args: {
-    applicant_name: v.string(),
     applicant_email: v.string(),
+    applicant_name: v.string(),
     applicant_phone: v.string(),
     cover_letter: v.optional(v.string()),
     cv_file_name: v.optional(v.string()),
     cv_file_path: v.optional(v.string()),
+    cv_storage_id: v.optional(v.id("_storage")),
     job_id: v.id("jobs"),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-
     const applicationId = await ctx.db.insert("applications", {
       ...args,
       internship_id: null,
@@ -41,7 +41,6 @@ export const createJobApplication = mutation({
       created_at: now,
       updated_at: now,
     });
-
     return await ctx.db.get(applicationId);
   },
 });
@@ -49,17 +48,17 @@ export const createJobApplication = mutation({
 // Mutation to create an internship application
 export const createInternshipApplication = mutation({
   args: {
-    applicant_name: v.string(),
     applicant_email: v.string(),
+    applicant_name: v.string(),
     applicant_phone: v.string(),
     cover_letter: v.optional(v.string()),
     cv_file_name: v.optional(v.string()),
     cv_file_path: v.optional(v.string()),
+    cv_storage_id: v.optional(v.id("_storage")),
     internship_id: v.id("internships"),
   },
   handler: async (ctx, args) => {
     const now = new Date().toISOString();
-
     const applicationId = await ctx.db.insert("applications", {
       ...args,
       job_id: null,
@@ -68,7 +67,6 @@ export const createInternshipApplication = mutation({
       created_at: now,
       updated_at: now,
     });
-
     return await ctx.db.get(applicationId);
   },
 });
