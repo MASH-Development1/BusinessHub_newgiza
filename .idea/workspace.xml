@@ -6,14 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="4dd05671-2941-42ee-8855-aeece5fc3e67" name="Changes" comment="removed cv-job-match tab from admin complete page&#10;&#10;(cherry picked from commit 4c4d8ba263743cd75df7aa03794a00f33d3c87a4)">
       <changelist_data name="Ali-Dmerdash" email="96997495+ali-dmerdash@users.noreply.github.com" date="1752769021000" automatic="true" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/components/modals/application-modal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/components/modals/application-modal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/lib/convexApi.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/lib/convexApi.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/lib/typeAdapter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/lib/typeAdapter.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/pages/admin-complete.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/admin-complete.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/pages/internships.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/pages/internships.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/convex/applications.ts" beforeDir="false" afterPath="$PROJECT_DIR$/convex/applications.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,7 +73,7 @@
       <workItem from="1752758606728" duration="341000" />
       <workItem from="1752763220108" duration="7263000" />
       <workItem from="1753112417854" duration="2466000" />
-      <workItem from="1753350986174" duration="7396000" />
+      <workItem from="1753350986174" duration="10338000" />
     </task>
     <servers />
   </component>
