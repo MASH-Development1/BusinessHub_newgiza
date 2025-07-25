@@ -1106,6 +1106,28 @@ export default function AdminComplete() {
   const { data: cvMatches = [], isLoading: isLoadingCvMatches } =
     useMatchingJobsForCV(selectedCvId || null);
 
+  // 1. Add toggle state at the top of AdminComplete
+  const [useNewApplicationsTab, setUseNewApplicationsTab] = useState(true);
+
+  // 2. Add filter/search state for the new Applications tab
+  const [appStatus, setAppStatus] = useState("All Status");
+  const [appSearch, setAppSearch] = useState("");
+  const applicationStatuses = [
+    "All Status",
+    "submitted",
+    "under_review",
+    "interview",
+    "accepted",
+    "rejected"
+  ];
+  const statusLabels: Record<string, string> = {
+    submitted: "Submitted",
+    under_review: "Under Review",
+    interview: "Interview",
+    accepted: "Accepted",
+    rejected: "Rejected"
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -2863,78 +2885,102 @@ export default function AdminComplete() {
 
           {/* Applications Tab */}
           <TabsContent value="applications" className="space-y-6">
-            <Card>
+            <Card className="bg-white border border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  All Applications ({applications.length})
+                  <FileText className="h-5 w-5 text-black" />
+                  <p className="text-black">Application Management ({applications.length} total)</p>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4 h-[600px] overflow-y-auto">
-                  {applications.length === 0 ? (
-                    <div className="text-center py-8">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No applications yet</p>
-                    </div>
-                  ) : (
-                    applications.map((application) => (
-                      <div
-                        key={application.id}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">
-                              {application.applicantName}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              {application.applicantEmail}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {application.applicantPhone}
-                            </p>
-                            <div className="mt-2">
-                              <Badge
-                                variant={getStatusBadge(application.status)}
-                              >
-                                {application.status}
-                              </Badge>
+                {/* Filter/Search Bar */}
+                <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <Input
+                    className="flex-1 min-w-[220px]"
+                    placeholder="Search by name or email..."
+                    value={appSearch}
+                    onChange={e => setAppSearch(e.target.value)}
+                  />
+                  <Select value={appStatus} onValueChange={setAppStatus}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {applicationStatuses.map(status => (
+                        <SelectItem key={status} value={status}>
+                          {status === "All Status" ? "All Status" : statusLabels[status]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Filtered Applications List */}
+                <div className="space-y-6 max-h-[700px] overflow-y-auto">
+                  {applications
+                    .filter(app => {
+                      // Search filter
+                      const q = appSearch.toLowerCase();
+                      const matchesSearch =
+                        !q ||
+                        app.applicantName?.toLowerCase().includes(q) ||
+                        app.applicantEmail?.toLowerCase().includes(q);
+                      // Status filter
+                      const matchesStatus = appStatus === "All Status" || (app.status || "submitted") === appStatus;
+                      return matchesSearch && matchesStatus;
+                    })
+                    .map(app => {
+                      const isJob = !!app.jobId;
+                      const isInternship = !!app.internshipId;
+                      const statusValue = app.status || "submitted";
+                      return (
+                        <Card key={app.id} className="bg-white border border-gray-200 shadow-sm">
+                          <CardContent className="p-6">
+                            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                              <div className="flex-1 min-w-[250px]">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-semibold text-lg text-gray-900">{app.applicantName}</span>
+                                  <Badge variant="secondary" className="text-xs px-2 py-0.5">{statusLabels[statusValue] || statusValue}</Badge>
+                                </div>
+                                <div className="text-sm text-gray-700 mb-1">
+                                  <span className="font-medium">Email:</span> <a href={`mailto:${app.applicantEmail}`} className="text-blue-600 underline">{app.applicantEmail}</a>
+                                  {app.applicantPhone && (
+                                    <span className="ml-4"><span className="font-medium">Phone:</span> <a href={`tel:${app.applicantPhone}`} className="text-green-700 underline">{app.applicantPhone}</a></span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-700 mb-1">
+                                  <span className="font-medium">Position:</span> {isJob ? "Job Application" : isInternship ? "Internship Application" : "N/A"}
+                                </div>
+                                <div className="text-xs text-gray-500 mb-2">
+                                  <span className="font-medium">Applied:</span> {formatDate(app.createdAt)}
+                                </div>
+                                {app.coverLetter && (
+                                  <div className="bg-gray-50 border rounded p-2 text-sm text-gray-800 mb-2">
+                                    <span className="font-medium text-gray-600">Cover Letter:</span>
+                                    <div className="mt-1 whitespace-pre-line">{app.coverLetter}</div>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex flex-col gap-2 min-w-[180px]">
+                                <Select value={statusValue} onValueChange={status => updateApplicationStatusMutation.mutate({ id: app.id, status })}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {applicationStatuses.filter(s => s !== "All Status").map(status => (
+                                      <SelectItem key={status} value={status}>{statusLabels[status]}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Button size="sm" variant="outline" className="border-green-400 text-green-700" onClick={() => app.cvFilePath && window.open(app.cvFilePath, "_blank")}>View CV</Button>
+                                <Button size="sm" variant="outline" className="border-blue-400 text-blue-700" onClick={() => app.cvFilePath && window.open(app.cvFilePath, "_blank")}>Download</Button>
+                                <Button size="sm" variant="outline" className="border-purple-400 text-purple-700" onClick={() => window.open(`mailto:${app.applicantEmail}`)}>Email</Button>
+                                <Button size="sm" variant="outline" className="border-orange-400 text-orange-700" onClick={() => app.applicantPhone && window.open(`tel:${app.applicantPhone}`)}>Call</Button>
+                              </div>
                             </div>
-                            <p className="text-sm text-gray-500 mt-2">
-                              Applied: {formatDate(application.createdAt)}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                updateApplicationStatusMutation.mutate({
-                                  id: application.id,
-                                  status: "accepted",
-                                })
-                              }
-                            >
-                              Accept
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() =>
-                                updateApplicationStatusMutation.mutate({
-                                  id: application.id,
-                                  status: "rejected",
-                                })
-                              }
-                            >
-                              Reject
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>
