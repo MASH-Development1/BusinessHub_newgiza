@@ -28,7 +28,7 @@ export function CVDownloadButton({
       onClick={() => fileUrl && window.open(fileUrl, "_blank")}
     >
       <FileText className="h-4 w-4 mr-2" />
-      {isLoading ? "Loading..." : "Download CV"}
+      {isLoading ? "Loading..." : "View CV"}
     </Button>
   );
 }

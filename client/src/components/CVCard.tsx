@@ -111,19 +111,11 @@ export function CVCard({
                 <Button
                   size="sm"
                   className="flex-1"
-                  onClick={() => {
-                    if (cvFileUrl) {
-                      window.open(cvFileUrl, "_blank");
-                    } else {
-                      window.open(
-                        `/api/cv-showcase/${cv.id}/download`,
-                        "_blank"
-                      );
-                    }
-                  }}
+                  onClick={() => cvFileUrl && window.open(cvFileUrl, "_blank")}
+                  disabled={!cvFileUrl}
                 >
                   <FileText className="h-4 w-4 mr-1" />
-                  Download CV
+                  View CV
                 </Button>
               ) : (
                 <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground italic border border-dashed border-border rounded-md py-2">
@@ -179,7 +171,7 @@ export function CVCard({
                   <Lock className="h-4 w-4" />
                 </Button>
               ) : (
-                <Link href="/cv-login">
+                <Link href="/login">
                   <Button
                     size="sm"
                     variant="outline"

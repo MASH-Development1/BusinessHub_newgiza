@@ -71,6 +71,7 @@ import {
   useMatchingCVsForJob,
   useMatchingJobsForCV,
   useCvShowcase,
+  useCvFileUrl,
 } from "@/lib/convexApi";
 import {
   Job,
@@ -1126,6 +1127,48 @@ export default function AdminComplete() {
     interview: "Interview",
     accepted: "Accepted",
     rejected: "Rejected",
+  };
+
+  // CV Card Component with proper hook usage
+  const CvCard = ({ cv }: { cv: any }) => {
+    const { data: cvFileUrl } = useCvFileUrl(cv.id);
+
+    return (
+      <div
+        key={cv.id}
+        className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700"
+      >
+        <h3 className="font-semibold text-gray-900 dark:text-white">
+          {cv.name}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-300">{cv.email}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{cv.section}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {cv.experience}
+        </p>
+        <div className="flex gap-2 mt-3">
+          {cv.cvFileName && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => cvFileUrl && window.open(cvFileUrl, "_blank")}
+              disabled={!cvFileUrl}
+              className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              View
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => deleteCvMutation.mutate(cv.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -3090,48 +3133,7 @@ export default function AdminComplete() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {cvs.map((cv) => (
-                    <div
-                      key={cv.id}
-                      className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700"
-                    >
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
-                        {cv.name}
-                      </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {cv.email}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {cv.section}
-                      </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {cv.experience}
-                      </p>
-                      <div className="flex gap-2 mt-3">
-                        {cv.cvFileName && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              window.open(
-                                `/api/cv-showcase/${cv.id}/download`,
-                                "_blank"
-                              )
-                            }
-                            className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => deleteCvMutation.mutate(cv.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    <CvCard key={cv.id} cv={cv} />
                   ))}
                 </div>
               </CardContent>
