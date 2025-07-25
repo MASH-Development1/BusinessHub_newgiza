@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Building, Building2, Search, Download, Calendar } from "lucide-react";
+import {
+  Building,
+  Building2,
+  Search,
+  Download,
+  Calendar,
+  Target,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -62,6 +69,7 @@ import {
   usePermanentlyDeleteRemovedInternship,
   useMatchingCVsForJob,
   useMatchingJobsForCV,
+  useCvShowcase,
 } from "@/lib/convexApi";
 import {
   Job,
@@ -269,6 +277,7 @@ export default function AdminComplete() {
   const { data: courses = [] } = useCourses();
   const { data: applications = [] } = useApplications();
   const { data: profiles = [] } = useProfiles();
+  const { data: cvs = [] } = useCvShowcase();
   const { data: benefits = [] } = useCommunityBenefits();
   const { data: whitelist = [] } = useWhitelist();
   const { data: accessRequests = [] } = useAccessRequests();
@@ -2854,64 +2863,67 @@ export default function AdminComplete() {
 
           {/* CVs Tab */}
           <TabsContent value="cvs" className="space-y-6">
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  CV Showcase Management ({profiles.length})
+                <CardTitle className="text-gray-900 dark:text-white">
+                  CV Management ({cvs.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4 h-[600px] overflow-y-auto">
-                  {profiles.length === 0 ? (
-                    <div className="text-center py-8">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-500">No CVs uploaded yet</p>
-                    </div>
-                  ) : (
-                    profiles.map((profile) => (
-                      <div
-                        key={profile.id}
-                        className="border border-gray-200 rounded-lg p-4 bg-gray-50"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{profile.name}</h3>
-                            <p className="text-sm text-gray-600">
-                              {profile.contact}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              {profile.title}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Uploaded: {formatDate(profile.createdAt)}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                profile.cvFilePath &&
-                                window.open(profile.cvFilePath, "_blank")
-                              }
-                            >
-                              View CV
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() =>
-                                deleteCvMutation.mutate(profile.id)
-                              }
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {cvs.map((cv) => (
+                    <div
+                      key={cv.id}
+                      className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-700"
+                    >
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                        {cv.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {cv.email}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {cv.section}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {cv.experience}
+                      </p>
+                      <div className="flex gap-2 mt-3">
+                        {cv.cvFileName && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              window.open(
+                                `/api/cv-showcase/${cv.id}/download`,
+                                "_blank"
+                              )
+                            }
+                            className="text-blue-600 border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900"
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedCvId(cv.id)}
+                          className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900"
+                        >
+                          <Target className="h-4 w-4 mr-1" />
+                          Match Jobs
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteCvMutation.mutate(cv.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -2938,7 +2950,7 @@ export default function AdminComplete() {
                         </Label>
                       </div>
                       <select
-                        className="w-full border-2 border-blue-300 rounded-lg p-3 text-base bg-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="w-full border-2 border-blue-300 rounded-lg p-3 text-base bg-white text-black focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all"
                         value={selectedJobId}
                         onChange={(e) => setSelectedJobId(e.target.value)}
                       >

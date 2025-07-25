@@ -714,7 +714,9 @@ export const useAccessRequests = () => {
   return useQuery({
     queryKey: ["accessRequests"],
     queryFn: async () => {
-      const convexRequests = await convex.query(api.accessRequests.getAll);
+      const convexRequests = await convex.query(api.accessRequests.getAll, {
+        filters: { status: "pending" },
+      });
       return convexRequests.map(adaptAccessRequest);
     },
   });
