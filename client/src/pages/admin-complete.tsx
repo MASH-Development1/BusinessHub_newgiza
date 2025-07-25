@@ -3125,15 +3125,6 @@ export default function AdminComplete() {
                         )}
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedCvId(cv.id)}
-                          className="text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900"
-                        >
-                          <Target className="h-4 w-4 mr-1" />
-                          Match Jobs
-                        </Button>
-                        <Button
-                          size="sm"
                           variant="destructive"
                           onClick={() => deleteCvMutation.mutate(cv.id)}
                         >
