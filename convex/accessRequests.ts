@@ -46,9 +46,27 @@ export const create = mutation({
 });
 
 export const getAll = query({
-  args: {},
-  handler: async (ctx) => {
-    return (await ctx.db.query("access_requests").collect()).reverse();
+  args: {
+    filters: v.optional(v.record(v.string(), v.string())),
+  },
+  handler: async (ctx, args) => {
+    let accessRequests = await ctx.db.query("access_requests").collect();
+
+    // Apply filters if provided, otherwise default to pending only
+    const filters = args.filters || { status: "pending" };
+
+    if (filters) {
+      accessRequests = accessRequests.filter((request) => {
+        for (const [key, value] of Object.entries(filters)) {
+          if (value && request[key as keyof typeof request] !== value) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    return accessRequests.reverse();
   },
 });
 
